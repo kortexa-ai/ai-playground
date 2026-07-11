@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Signal Garden</title>
+  <style>
+    :root { color-scheme: dark; --ink:#edf7f2; --dim:#87a49a; --glass:rgba(7,18,17,.72); --line:rgba(174,255,222,.14); }
+    * { box-sizing:border-box; }
+    html,body { width:100%; height:100%; margin:0; overflow:hidden; background:#030908; color:var(--ink); font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
+    canvas { position:fixed; inset:0; width:100%; height:100%; }
+    .grain { position:fixed; inset:0; pointer-events:none; opacity:.055; mix-blend-mode:screen; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 140 140' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.83' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.8'/%3E%3C/svg%3E"); }
+    header { position:fixed; top:24px; left:28px; right:28px; display:flex; align-items:flex-start; justify-content:space-between; pointer-events:none; }
+    h1 { margin:0; font-size:13px; font-weight:600; letter-spacing:.24em; text-transform:uppercase; }
+    .sub { margin-top:8px; color:var(--dim); font-size:11px; letter-spacing:.05em; }
+    .stats { text-align:right; color:var(--dim); font-size:10px; line-height:1.7; }
+    .composer { position:fixed; left:50%; bottom:27px; transform:translateX(-50%); width:min(760px,calc(100% - 40px)); padding:12px; border:1px solid var(--line); border-radius:16px; background:var(--glass); backdrop-filter:blur(18px); box-shadow:0 18px 70px rgba(0,0,0,.35); }
+    .inputrow { display:flex; align-items:center; gap:10px; }
+    .sigil { color:#77e6ba; font-size:17px; padding-left:4px; }
+    input { width:100%; border:0; outline:0; color:var(--ink); background:transparent; font:14px/1.4 inherit; caret-color:#8effcf; }
+    input::placeholder { color:#567068; }
+    .controls { display:flex; justify-content:space-between; gap:14px; margin-top:9px; padding:8px 4px 0; border-top:1px solid var(--line); color:var(--dim); font-size:9px; text-transform:uppercase; letter-spacing:.12em; }
+    .keys { display:flex; gap:14px; flex-wrap:wrap; }
+    kbd { color:#c5dfd5; font:inherit; }
+    button { border:0; padding:0; color:var(--dim); background:none; font:inherit; text-transform:uppercase; letter-spacing:.12em; cursor:pointer; }
+    button:hover { color:var(--ink); }
+    .toast { position:fixed; top:82px; left:50%; transform:translate(-50%,-8px); padding:7px 12px; opacity:0; border:1px solid var(--line); border-radius:99px; background:var(--glass); color:#b9d4ca; font-size:10px; transition:.25s; pointer-events:none; }
+    .toast.show { opacity:1; transform:translate(-50%,0); }
+    @media(max-width:600px){ .optional{display:none}.controls{justify-content:center}.stats{display:none} }
+  </style>
+</head>
+<body>
+  <canvas id="garden"></canvas><div class="grain"></div>
+  <header><div><h1>Signal Garden</h1><div class="sub">language, left alone, begins to move</div></div><div class="stats" id="stats"></div></header>
+  <div class="toast" id="toast"></div>
+  <main class="composer">
+    <div class="inputrow"><span class="sigil">⌁</span><input id="phrase" autocomplete="off" autofocus placeholder="plant a thought…"></div>
+    <div class="controls"><div class="keys"><span><kbd>enter</kbd> plant</span><span><kbd>esc</kbd> drift</span><span><kbd>space</kbd> pause</span><span class="optional"><kbd>r</kbd> replay</span><span class="optional"><kbd>c</kbd> clear</span><span class="optional"><kbd>s</kbd> sound</span></div><button id="export">export</button></div>
+  </main>
+<script>
+(() => {
+  'use strict';
+  const canvas=document.querySelector('#garden'),ctx=canvas.getContext('2d',{alpha:false});
+  const input=document.querySelector('#phrase'),stats=document.querySelector('#stats'),toast=document.querySelector('#toast');
+  let W=0,H=0,DPR=1,t=0,last=performance.now(),paused=false,sound=false,audio=null,seed=0x51a9e1,nextId=1,history=[];
+  const particles=[],species=new Map(),connections=[];
+  const hash=s=>{let h=2166136261;for(const c of s){h^=c.codePointAt(0);h=Math.imul(h,16777619)}return h>>>0};
+  const rand=()=>{seed|=0;seed=seed+0x6D2B79F5|0;let x=Math.imul(seed^seed>>>15,1|seed);x=x+Math.imul(x^x>>>7,61|x)^x;return((x^x>>>14)>>>0)/4294967296};
+  const fixedRand=(id,cycle,salt=0)=>{let x=hash(`${id}:${cycle}:${salt}`);x=Math.imul(x^x>>>16,0x21f0aaad);x=Math.imul(x^x>>>15,0x735a2d97);return((x^x>>>15)>>>0)/4294967296};
+  const tokenize=s=>(s.toLowerCase().match(/[\p{L}\p{N}'-]+|[!?.,;:]/gu)||[]);
+  const similarity=(a,b)=>{const A=new Set(a),B=new Set(b);let n=0;for(const c of A)if(B.has(c))n++;return n/Math.max(A.size,B.size,1)};
+  function resize(){DPR=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;canvas.width=W*DPR;canvas.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0)}
+  addEventListener('resize',resize);resize();
+  function getSpecies(word){
+    if(species.has(word))return species.get(word);
+    const h=hash(word),sp={word,h,hue:(h%290)+55,phase:(h%628)/100,radius:2.2+(h%35)/10,count:0,energy:1};
+    for(const other of species.values()){const sim=similarity(word,other.word);if(sim>.34)connections.push({a:sp,b:other,strength:sim})}
+    species.set(word,sp);return sp;
+  }
+  function plant(text,record=true){
+    const words=tokenize(text);if(!words.length)return;
+    if(record)history.push(text);
+    let punctuation=1;
+    words.forEach((word,i)=>{
+      if(/^[!?.,;:]$/.test(word)){punctuation=word==='!'?1.9:word==='?'?1.5:.75;return}
+      const sp=getSpecies(word);sp.count++;sp.energy=Math.min(3,sp.energy+.25);
+      const amount=Math.min(18,3+Math.ceil(Math.sqrt(word.length)*2));
+      const angle=(i/Math.max(words.length,1))*Math.PI*2+sp.phase;
+      const cx=W*.5+Math.cos(angle)*Math.min(W,H)*(.08+rand()*.18),cy=H*.43+Math.sin(angle)*Math.min(W,H)*(.08+rand()*.18);
+      for(let n=0;n<amount;n++){
+        const a=rand()*Math.PI*2,speed=(.12+rand()*.65)*punctuation;
+        particles.push({id:nextId++,cycle:0,sp,x:cx+(rand()-.5)*28,y:cy+(rand()-.5)*28,homeX:cx,homeY:cy,px:cx,py:cy,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,life:0,max:1400+rand()*2600,size:sp.radius*(.45+rand()*.85),alpha:.25+rand()*.65});
+      }
+      ping(sp.hue,word.length,i*45);
+    });
+    input.value='';flash(`${words.filter(w=>!/^\W$/.test(w)).length} signals planted`);
+  }
+  function ping(hue,len,delay){if(!sound)return;setTimeout(()=>{audio??=new AudioContext();const o=audio.createOscillator(),g=audio.createGain();o.type='sine';o.frequency.value=110*Math.pow(2,(hue%24)/12);g.gain.setValueAtTime(.0001,audio.currentTime);g.gain.exponentialRampToValueAtTime(.022+Math.min(len,10)*.002,audio.currentTime+.015);g.gain.exponentialRampToValueAtTime(.0001,audio.currentTime+.34);o.connect(g).connect(audio.destination);o.start();o.stop(audio.currentTime+.36)},delay)}
+  function step(dt){
+    t+=dt;for(const sp of species.values())sp.energy=Math.max(.6,sp.energy-dt*.00003);
+    for(let i=particles.length-1;i>=0;i--){const p=particles[i],sp=p.sp;p.life+=dt;
+      const dx=W*.5-p.x,dy=H*.43-p.y,d=Math.hypot(dx,dy)+1,swirl=Math.sin(t*.00018+sp.phase+p.life*.001)*.0009*sp.energy;
+      p.vx+=dx/d*.00016*sp.energy*dt+(-dy/d)*swirl*dt;p.vy+=dy/d*.00016*sp.energy*dt+(dx/d)*swirl*dt;
+      p.vx*=Math.pow(.998,dt/16);p.vy*=Math.pow(.998,dt/16);p.px=p.x;p.py=p.y;p.x+=p.vx*dt*.06;p.y+=p.vy*dt*.06;
+      if(p.x<0)p.x+=W;if(p.x>W)p.x-=W;if(p.y<0)p.y+=H;if(p.y>H)p.y-=H;
+      if(p.life>p.max)rebloom(p)
+    }
+  }
+  function rebloom(p){
+    p.cycle++;p.life=0;p.max=1400+fixedRand(p.id,p.cycle,1)*2600;
+    const orbit=Math.min(W,H)*(.025+fixedRand(p.id,p.cycle,2)*.075),a=fixedRand(p.id,p.cycle,3)*Math.PI*2+p.sp.phase;
+    p.x=p.homeX+Math.cos(a)*orbit;p.y=p.homeY+Math.sin(a)*orbit;p.px=p.x;p.py=p.y;
+    const heading=a+Math.PI*.5+(fixedRand(p.id,p.cycle,4)-.5)*1.4,speed=.12+fixedRand(p.id,p.cycle,5)*.62;
+    p.vx=Math.cos(heading)*speed;p.vy=Math.sin(heading)*speed;
+  }
+  function draw(){
+    ctx.fillStyle='rgba(3,9,8,.16)';ctx.fillRect(0,0,W,H);
+    ctx.globalCompositeOperation='lighter';
+    for(const link of connections){const A=centroid(link.a),B=centroid(link.b);if(!A||!B)continue;ctx.strokeStyle=`hsla(${(link.a.hue+link.b.hue)/2},55%,55%,${.018*link.strength})`;ctx.beginPath();ctx.moveTo(A.x,A.y);ctx.lineTo(B.x,B.y);ctx.stroke()}
+    for(const p of particles){const fade=Math.min(1,p.life/500)*Math.min(1,(p.max-p.life)/500);ctx.strokeStyle=`hsla(${p.sp.hue},78%,65%,${p.alpha*fade*.42})`;ctx.lineWidth=p.size*.55;ctx.beginPath();ctx.moveTo(p.px,p.py);ctx.lineTo(p.x,p.y);ctx.stroke();ctx.fillStyle=`hsla(${p.sp.hue},90%,70%,${p.alpha*fade})`;ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fill()}
+    ctx.globalCompositeOperation='source-over';
+    if(particles.length<3){ctx.fillStyle='rgba(150,190,176,.18)';ctx.font='11px ui-monospace,monospace';ctx.textAlign='center';ctx.fillText('the garden is listening',W/2,H*.43)}
+  }
+  function centroid(sp){let x=0,y=0,n=0;for(const p of particles)if(p.sp===sp){x+=p.x;y+=p.y;n++}return n?{x:x/n,y:y/n}:null}
+  function frame(now){const dt=Math.min(40,now-last);last=now;if(!paused)step(dt);draw();stats.innerHTML=`${species.size} species<br>${particles.length} signals<br>${paused?'still':'growing'} · sound ${sound?'on':'off'}`;requestAnimationFrame(frame)}
+  function clear(){particles.length=0;species.clear();connections.length=0;history=[];seed=0x51a9e1;nextId=1;ctx.fillStyle='#030908';ctx.fillRect(0,0,W,H);flash('garden cleared')}
+  function replay(){const saved=[...history];particles.length=0;species.clear();connections.length=0;seed=0x51a9e1;nextId=1;history=[];for(const phrase of saved)plant(phrase,true);flash('reseeded from memory')}
+  function flash(msg){toast.textContent=msg;toast.classList.add('show');clearTimeout(flash.timer);flash.timer=setTimeout(()=>toast.classList.remove('show'),1300)}
+  function exportGarden(){const blob=new Blob([JSON.stringify({name:'Signal Garden',version:1,seed:0x51a9e1,history},null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`signal-garden-${new Date().toISOString().slice(0,10)}.json`;a.click();URL.revokeObjectURL(a.href);flash('garden exported')}
+  input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();plant(input.value)}else if(e.key==='Escape'){input.blur();flash('drift mode')}e.stopPropagation()});
+  canvas.addEventListener('pointerdown',()=>input.blur());
+  addEventListener('keydown',e=>{if(document.activeElement===input&&e.key!=='Escape')return;if(e.code==='Space'){e.preventDefault();paused=!paused;flash(paused?'growth paused':'growth resumed')}else if(e.key.toLowerCase()==='r')replay();else if(e.key.toLowerCase()==='c')clear();else if(e.key.toLowerCase()==='s'){sound=!sound;flash(`sound ${sound?'on':'off'}`)}else if(e.key.toLowerCase()==='e')exportGarden()});
+  document.querySelector('#export').onclick=exportGarden;
+  addEventListener('dragover',e=>e.preventDefault());addEventListener('drop',e=>{e.preventDefault();const f=e.dataTransfer.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const data=JSON.parse(r.result);if(!Array.isArray(data.history))throw 0;clear();for(const phrase of data.history)plant(String(phrase));flash('garden restored')}catch{flash('that file is not a garden')}};r.readAsText(f)});
+  ctx.fillStyle='#030908';ctx.fillRect(0,0,W,H);requestAnimationFrame(frame);
+  setTimeout(()=>plant('small signals find each other',true),450);
+})();
+</script>
+</body>
+</html>
