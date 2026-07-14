@@ -39,10 +39,13 @@ loopback.
   cruise/dive states, banking turns, glide-tuck during dives, autonomous
   hunts when the mouse is idle.
 - **Environment** (`src/mainview/environment.ts`) — art-directed unlit
-  dusk: custom gradient sky dome with sun disc, analytic sun-glitter
-  water with nonlinearly-warped ripple fields, three noise-topped ridge
-  silhouette rings, twinkling stars.
-- **Post** — bloom + vignette via three's TSL PostProcessing.
+  world on a ~4-minute day-night cycle: the sun sets, a moon rises on
+  the opposite shore, and the gradient sky dome, glitter path, fog, and
+  star brightness all cross-fade between dusk and night palettes.
+  Analytic sun/moon-glitter water with nonlinearly-warped ripple fields,
+  three noise-topped ridge silhouette rings, twinkling stars.
+- **Post** — afterimage motion trails (silky wing smear during
+  scatters) + bloom + vignette via three's TSL PostProcessing.
 - **Audio** (`src/mainview/audio.ts`) — procedural WebAudio soundscape:
   band-passed pink-noise wind with slow LFO, detuned sine pad, a
   wingbeat-tremolo flutter layer that tracks flock panic, and a falling
@@ -72,11 +75,14 @@ loopback.
    panel is consequently decorative for now.
 2. **WebView2 runs on the power-saving GPU by default.** On this
    dual-GPU laptop the AMD iGPU driver hung (DXGI_ERROR_DEVICE_HUNG) on
-   this workload; the fix was per-app GPU preference in the registry:
+   this workload; the fix is per-app GPU preference in the registry:
    `HKCU\Software\Microsoft\DirectX\UserGpuPreferences` →
    `GpuPreference=2;` for the WebView2 runtime exes under
    `C:\Program Files (x86)\Microsoft\EdgeWebView\Application\<ver>\msedgewebview2.exe`.
-   Remove those values to undo.
+   Gotcha: the runtime auto-updates into a *new* version directory,
+   silently orphaning the preference (and re-breaking the app), so the
+   bun host re-asserts it for every installed version on each launch.
+   Delete those registry values to undo.
 3. **TSL `Loop` bounds must be uniforms, not literals** — a
    compile-time trip count of thousands invites the D3D shader compiler
    to fully unroll the loop, stalling pipeline creation for 10–20s until

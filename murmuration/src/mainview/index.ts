@@ -1,6 +1,7 @@
 import * as THREE from "three/webgpu";
 import { pass, screenUV, length as tslLength, float, smoothstep } from "three/tsl";
 import { bloom } from "three/addons/tsl/display/BloomNode.js";
+import { afterImage } from "three/addons/tsl/display/AfterImageNode.js";
 
 import { blog, sendStats, onPumpInput, type PumpInput } from "./rpc";
 import { createFlock, type Flock } from "./flock";
@@ -106,7 +107,11 @@ async function main() {
 
 	const env = FLAGS.environment
 		? createEnvironment(scene)
-		: { sunDir: new THREE.Vector3(0, 1, 0), update: (_: number) => {} };
+		: {
+				sunDir: new THREE.Vector3(0, 1, 0),
+				fogColor: palette.fog.clone(),
+				update: (_: number) => {},
+			};
 	const falcon = createFalcon(scene, palette.fog);
 	falcon.mesh.visible = FLAGS.falcon;
 	const sound = createSoundscape();
@@ -129,7 +134,10 @@ async function main() {
 	const buildPost = () => {
 		const scenePass = pass(scene, camera);
 		const color = scenePass.getTextureNode();
-		const bloomed = color.add(bloom(color, 0.24, 0.5, 0.8));
+		// subtle afterimage gives the flock silky motion trails; bloom
+		// after it so trails of bright glitter glow too
+		const trailed = afterImage(color, 0.72);
+		const bloomed = trailed.add(bloom(trailed, 0.24, 0.5, 0.8));
 		const vig = smoothstep(
 			float(1.45),
 			float(0.4),
@@ -332,6 +340,7 @@ async function main() {
 		if (flock) {
 			const u = flock.uniforms;
 			u.deltaTime.value = dt;
+			u.fogColor.value.copy(env.fogColor); // aerial fade tracks the cycle
 			u.anchor.value.copy(anchor);
 			u.falconPos.value.copy(falcon.enabled ? falcon.position : FAR_AWAY);
 			u.wCoh.value = params.cohesion;

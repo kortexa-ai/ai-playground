@@ -4,7 +4,6 @@ import {
 	float,
 	vec3,
 	sin,
-	cos,
 	abs,
 	max,
 	pow,
@@ -21,7 +20,8 @@ import {
 	hash,
 } from "three/tsl";
 
-// Dusk palette — everything else keys off these.
+// Dusk palette — start-of-cycle values; the day-night cycle lerps the
+// live uniforms between `duskKey` and `nightKey` below.
 export const palette = {
 	fog: new THREE.Color(0x2b1a29),
 	waterDeep: new THREE.Color(0x0a0d16),
@@ -31,65 +31,109 @@ export const palette = {
 	ridge0: new THREE.Color(0x140f1c),
 	ridge1: new THREE.Color(0x1b1424),
 	ridge2: new THREE.Color(0x271a2e),
-	// sky dome
 	skyZenith: new THREE.Color(0x191a33),
 	skyAway: new THREE.Color(0x35203c),
 	skySunBand: new THREE.Color(0xc65f2a),
 	skySunHot: new THREE.Color(0xffcf8f),
 };
 
+interface CycleKey {
+	zenith: THREE.Color;
+	away: THREE.Color;
+	band: THREE.Color;
+	hot: THREE.Color;
+	fog: THREE.Color;
+	waterDeep: THREE.Color;
+	waterHorizon: THREE.Color;
+	waterZenith: THREE.Color;
+	light: THREE.Color;
+	starBoost: number;
+}
+
+const duskKey: CycleKey = {
+	zenith: palette.skyZenith.clone(),
+	away: palette.skyAway.clone(),
+	band: palette.skySunBand.clone(),
+	hot: palette.skySunHot.clone(),
+	fog: palette.fog.clone(),
+	waterDeep: palette.waterDeep.clone(),
+	waterHorizon: palette.waterHorizon.clone(),
+	waterZenith: palette.zenithRef.clone(),
+	light: palette.sun.clone(),
+	starBoost: 0.55,
+};
+
+const nightKey: CycleKey = {
+	zenith: new THREE.Color(0x04050d),
+	away: new THREE.Color(0x0a0c1c),
+	band: new THREE.Color(0x1a2038),
+	hot: new THREE.Color(0xdfe8ff),
+	fog: new THREE.Color(0x0a0c15),
+	waterDeep: new THREE.Color(0x030409),
+	waterHorizon: new THREE.Color(0x0f1424),
+	waterZenith: new THREE.Color(0x060810),
+	light: new THREE.Color(0.62, 0.7, 0.92),
+	starBoost: 1.5,
+};
+
+/** Full dusk → night → dusk loop, seconds. */
+const CYCLE_SECONDS = 240;
+
 export interface Environment {
 	sunDir: THREE.Vector3;
+	/** current fog color — flock aerial fade follows this */
+	fogColor: THREE.Color;
 	update: (dt: number) => void;
 }
 
 export function createEnvironment(scene: THREE.Scene): Environment {
-	scene.fog = new THREE.Fog(palette.fog, 420, 1900);
+	scene.fog = new THREE.Fog(palette.fog.clone(), 420, 1900);
+
+	// ── Animated uniforms (driven by the cycle in update()) ───────
+	const sunAzimuth = 196;
+	const moonAzimuth = 336;
+	const lightDir = new THREE.Vector3();
+	setDirFromElevAz(lightDir, 4.5, sunAzimuth);
+
+	const uLightDir = uniform(lightDir.clone()).setName("uLightDir");
+	const uLightColor = uniform(palette.sun.clone()).setName("uLightColor");
+	const uLightXZ = uniform(
+		new THREE.Vector2(lightDir.x, lightDir.z).normalize(),
+	).setName("uLightXZ");
+	const uZenith = uniform(duskKey.zenith.clone()).setName("uZenith");
+	const uAway = uniform(duskKey.away.clone()).setName("uAway");
+	const uBand = uniform(duskKey.band.clone()).setName("uBand");
+	const uHot = uniform(duskKey.hot.clone()).setName("uHot");
+	const uWaterDeep = uniform(duskKey.waterDeep.clone()).setName("uWaterDeep");
+	const uWaterHorizon = uniform(duskKey.waterHorizon.clone()).setName(
+		"uWaterHorizon",
+	);
+	const uWaterZenith = uniform(duskKey.waterZenith.clone()).setName(
+		"uWaterZenith",
+	);
+	const uStarBoost = uniform(duskKey.starBoost).setName("uStarBoost");
 
 	// ── Sky ───────────────────────────────────────────────────────
-	// Custom art-directed dome. The physical SkyMesh model is honest and
-	// therefore dim at 4.5° sun elevation; a murmuration needs a bright
-	// dusk band to silhouette against, so the gradient is authored.
-	const elevation = 4.5;
-	const azimuth = 196;
-	const phi = THREE.MathUtils.degToRad(90 - elevation);
-	const theta = THREE.MathUtils.degToRad(azimuth);
-	const sunDir = new THREE.Vector3().setFromSphericalCoords(1, phi, theta);
-	const uSunDir = uniform(sunDir.clone()).setName("uSunDir");
-
+	// Art-directed dome: away-horizon → zenith gradient, a warm band
+	// hugging the horizon toward the light, plus a disc + halo that
+	// serves as sun at dusk and moon at night.
 	const skyColor = Fn(() => {
 		const dir = normalize(positionWorld).toVar();
 		const elev = dir.y.toVar();
 
-		// base gradient: away-horizon purple → zenith indigo
-		const zen = vec3(palette.skyZenith.r, palette.skyZenith.g, palette.skyZenith.b);
-		const away = vec3(palette.skyAway.r, palette.skyAway.g, palette.skyAway.b);
-		const base = mix(away, zen, smoothstep(-0.02, 0.42, elev)).toVar();
+		const base = mix(uAway, uZenith, smoothstep(-0.02, 0.42, elev)).toVar();
 
-		// warm band toward the sun, hugging the horizon
 		const flatDir = normalize(vec3(dir.x, 0.0, dir.z));
-		const sunFlat = normalize(vec3(uSunDir.x, 0.0, uSunDir.z));
-		const toward = max(dot(flatDir, sunFlat), 0.0);
-		const band = vec3(
-			palette.skySunBand.r,
-			palette.skySunBand.g,
-			palette.skySunBand.b,
-		);
+		const toward = max(dot(flatDir, normalize(vec3(uLightDir.x, 0.0, uLightDir.z))), 0.0);
 		const bandMask = pow(toward, 2.2)
 			.mul(smoothstep(0.34, 0.015, abs(elev.sub(0.02))))
 			.mul(1.15);
-		base.assign(mix(base, band, clamp(bandMask, 0.0, 1.0)));
+		base.assign(mix(base, uBand, clamp(bandMask, 0.0, 1.0)));
 
-		// sun disc + halo
-		const sunDot = max(dot(dir, uSunDir), 0.0);
-		const hot = vec3(
-			palette.skySunHot.r,
-			palette.skySunHot.g,
-			palette.skySunHot.b,
-		);
-		const halo = pow(sunDot, 42.0).mul(0.55);
-		const disc = pow(sunDot, 1600.0).mul(2.4);
-		base.addAssign(hot.mul(halo.add(disc)));
+		const lightDot = max(dot(dir, normalize(uLightDir)), 0.0);
+		const halo = pow(lightDot, 42.0).mul(0.55);
+		const disc = pow(lightDot, 1600.0).mul(2.4);
+		base.addAssign(uHot.mul(uLightColor).mul(halo.add(disc)));
 
 		return base;
 	});
@@ -105,19 +149,14 @@ export function createEnvironment(scene: THREE.Scene): Environment {
 
 	// ── Water ─────────────────────────────────────────────────────
 	// Unlit, art-directed: reflected sky gradient by grazing angle,
-	// ripple-perturbed, with an analytic sun-glitter path. Fog folds
-	// it into the horizon automatically.
-	const uSunXZ = uniform(
-		new THREE.Vector2(sunDir.x, sunDir.z).normalize(),
-	).setName("uSunXZ");
-
+	// ripple-perturbed, with an analytic glitter path toward the light.
 	const waterColor = Fn(() => {
 		const toFrag = positionWorld.sub(cameraPosition).toVar();
 		const dist = length(toFrag).add(1e-4);
 		const viewDir = toFrag.div(dist).toVar();
 
-		// ripple field — drifting sine products on rotated axes so no
-		// screen-space grid emerges
+		// ripple field — drifting sine products on rotated axes with
+		// nonlinear phase coupling so no lattice emerges
 		const px = positionWorld.x;
 		const pz = positionWorld.z;
 		const t = time;
@@ -127,7 +166,6 @@ export function createEnvironment(scene: THREE.Scene): Environment {
 		const d4 = px.mul(0.29).add(pz.mul(0.51));
 		const d5 = px.add(pz).mul(0.93);
 		const d6 = px.sub(pz).mul(1.21);
-		// nonlinear phase coupling between octaves kills lattice artifacts
 		const warp1 = sin(d1.mul(2.3)).mul(1.7);
 		const warp2 = sin(d2.mul(1.9)).mul(1.3);
 		const ripple = sin(d1.add(t.mul(0.55)))
@@ -144,33 +182,17 @@ export function createEnvironment(scene: THREE.Scene): Environment {
 			)
 			.toVar();
 
-		// reflected-sky elevation, perturbed by ripples
 		const refUp = abs(viewDir.y).add(ripple.mul(0.045)).toVar();
 		const grazing = clamp(float(1.0).sub(refUp.mul(2.2)), 0.0, 1.0);
 
-		const base = mix(
-			vec3(palette.waterDeep.r, palette.waterDeep.g, palette.waterDeep.b),
-			vec3(
-				palette.waterHorizon.r,
-				palette.waterHorizon.g,
-				palette.waterHorizon.b,
-			),
-			pow(grazing, 2.4),
-		).toVar();
-
-		// zenith reflection tint for near, steep views
+		const base = mix(uWaterDeep, uWaterHorizon, pow(grazing, 2.4)).toVar();
 		base.assign(
-			mix(
-				vec3(palette.zenithRef.r, palette.zenithRef.g, palette.zenithRef.b),
-				base,
-				clamp(grazing.mul(1.4).add(0.35), 0.0, 1.0),
-			),
+			mix(uWaterZenith, base, clamp(grazing.mul(1.4).add(0.35), 0.0, 1.0)),
 		);
 
-		// sun glitter path: column of sparkle stretching toward the sun,
-		// two rotated swells break up any residual lattice
+		// glitter path toward the light, two rotated swells break tiling
 		const flatView = normalize(viewDir.xz);
-		const align = max(dot(flatView, uSunXZ), 0.0);
+		const align = max(dot(flatView, uLightXZ), 0.0);
 		const path = pow(align, 34.0).mul(pow(grazing, 1.5)).toVar();
 		const swellA = sin(px.mul(0.0437).add(pz.mul(0.0181)).add(t.mul(0.21)))
 			.mul(0.5)
@@ -183,12 +205,9 @@ export function createEnvironment(scene: THREE.Scene): Environment {
 			.mul(swell.mul(1.9).add(0.25))
 			.mul(1.5)
 			.add(0.14);
-		const sunGlow = vec3(palette.sun.r, palette.sun.g, palette.sun.b)
-			.mul(path)
-			.mul(sparkle)
-			.mul(1.1);
+		const glow = uLightColor.mul(path).mul(sparkle).mul(1.1);
 
-		return base.add(sunGlow);
+		return base.add(glow);
 	});
 
 	const waterGeo = new THREE.CircleGeometry(3200, 96);
@@ -201,7 +220,7 @@ export function createEnvironment(scene: THREE.Scene): Environment {
 
 	// ── Ridge silhouettes ─────────────────────────────────────────
 	// Three concentric noise-topped rings — layered depth cues that
-	// hold up from any orbit angle. Dark flat colors + fog do the rest.
+	// hold up from any orbit angle. Fog tracks the cycle for them.
 	const ridgeSpecs = [
 		{ radius: 700, height: 26, color: palette.ridge2, seed: 5 },
 		{ radius: 1050, height: 44, color: palette.ridge1, seed: 11 },
@@ -245,13 +264,14 @@ export function createEnvironment(scene: THREE.Scene): Environment {
 	}
 
 	// ── Stars ─────────────────────────────────────────────────────
-	// Sparse twinkling points high in the dome, opposite the sun glow.
+	// Sparse twinkling points; the cycle raises their brightness as
+	// the sky darkens.
 	const starCount = 900;
 	const starPos = new Float32Array(starCount * 3);
 	const rand = mulberry(97);
 	for (let i = 0; i < starCount; i++) {
 		const az = rand() * Math.PI * 2;
-		const el = 0.18 + rand() * 1.25; // radians above horizon
+		const el = 0.18 + rand() * 1.25;
 		const r = 9000;
 		starPos[i * 3 + 0] = r * Math.cos(el) * Math.cos(az);
 		starPos[i * 3 + 1] = r * Math.sin(el);
@@ -262,27 +282,73 @@ export function createEnvironment(scene: THREE.Scene): Environment {
 	const starMat = new THREE.PointsNodeMaterial();
 	starMat.transparent = true;
 	starMat.depthWrite = false;
-	// per-star randomness derived from the star's own position, so it
-	// works whether points are native primitives or instanced sprites
 	const starSeed = hash(positionWorld.x.mul(0.373).add(positionWorld.z.mul(0.117)));
 	const starSeed2 = hash(positionWorld.z.mul(0.291).add(positionWorld.y.mul(0.083)));
 	const twinkle = sin(time.mul(starSeed.mul(2.4).add(0.6)).add(starSeed2.mul(6.28)))
 		.mul(0.5)
 		.add(0.5);
 	starMat.colorNode = vec3(0.78, 0.8, 0.92);
-	starMat.opacityNode = twinkle.mul(0.6).add(0.12);
+	starMat.opacityNode = twinkle.mul(0.6).add(0.12).mul(uStarBoost);
 	starMat.sizeNode = starSeed2.mul(2.4).add(1.4);
 	starMat.fog = false;
 	const stars = new THREE.Points(starGeo, starMat);
 	stars.frustumCulled = false;
 	scene.add(stars);
 
-	return {
-		sunDir,
-		update(_dt: number) {
-			// static dusk for now — hooks for a day cycle later
+	// ── Day-night cycle ───────────────────────────────────────────
+	let cycleT = 0;
+	const tmpColor = new THREE.Color();
+	const fogColor = (scene.fog as THREE.Fog).color;
+
+	const lerpInto = (target: THREE.Color, a: THREE.Color, b: THREE.Color, n: number) => {
+		target.copy(tmpColor.lerpColors(a, b, n));
+	};
+
+	const env: Environment = {
+		sunDir: lightDir,
+		fogColor,
+		update(dt: number) {
+			cycleT += dt;
+			const raw = 0.5 - 0.5 * Math.cos((cycleT / CYCLE_SECONDS) * Math.PI * 2);
+			// dwell at dusk and night, transition in between
+			const n = THREE.MathUtils.smoothstep(raw, 0.12, 0.88);
+
+			lerpInto(uZenith.value, duskKey.zenith, nightKey.zenith, n);
+			lerpInto(uAway.value, duskKey.away, nightKey.away, n);
+			lerpInto(uBand.value, duskKey.band, nightKey.band, n);
+			lerpInto(uHot.value, duskKey.hot, nightKey.hot, n);
+			lerpInto(uWaterDeep.value, duskKey.waterDeep, nightKey.waterDeep, n);
+			lerpInto(uWaterHorizon.value, duskKey.waterHorizon, nightKey.waterHorizon, n);
+			lerpInto(uWaterZenith.value, duskKey.waterZenith, nightKey.waterZenith, n);
+			lerpInto(fogColor, duskKey.fog, nightKey.fog, n);
+			uStarBoost.value = THREE.MathUtils.lerp(duskKey.starBoost, nightKey.starBoost, n);
+
+			// light handoff: sun sets over the first half of the
+			// transition, moon rises over the second; intensity dips to
+			// zero at the swap so the azimuth jump is invisible
+			if (n < 0.5) {
+				const k = n * 2;
+				setDirFromElevAz(lightDir, THREE.MathUtils.lerp(4.5, -7, k), sunAzimuth);
+				const strength = THREE.MathUtils.clamp((lightDir.y + 0.07) / 0.12, 0, 1);
+				uLightColor.value.copy(duskKey.light).multiplyScalar(0.25 + 0.75 * strength);
+			} else {
+				const k = n * 2 - 1;
+				setDirFromElevAz(lightDir, THREE.MathUtils.lerp(-7, 34, k), moonAzimuth);
+				const strength = THREE.MathUtils.clamp((lightDir.y + 0.07) / 0.3, 0, 1);
+				uLightColor.value.copy(nightKey.light).multiplyScalar(0.25 + 0.75 * strength);
+			}
+			uLightDir.value.copy(lightDir);
+			uLightXZ.value.set(lightDir.x, lightDir.z).normalize();
 		},
 	};
+
+	return env;
+}
+
+function setDirFromElevAz(out: THREE.Vector3, elevDeg: number, azDeg: number) {
+	const phi = THREE.MathUtils.degToRad(90 - elevDeg);
+	const theta = THREE.MathUtils.degToRad(azDeg);
+	out.setFromSphericalCoords(1, phi, theta);
 }
 
 // tiny deterministic PRNG so ridgelines are stable run to run

@@ -7,6 +7,36 @@ process.env.WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS =
 	"--enable-unsafe-webgpu --enable-dawn-features=use_dxc,allow_unsafe_apis";
 
 import { BrowserView, BrowserWindow, Screen } from "electrobun/bun";
+import { existsSync, readdirSync } from "fs";
+
+// WebView2 runs its GPU process on the power-saving adapter unless the
+// runtime exe has a high-performance GpuPreference — and the AMD iGPU
+// on this machine hangs (DEVICE_REMOVED) on our compute workload. The
+// runtime auto-updates into new version directories, which silently
+// orphans any previously-set preference, so re-assert it for every
+// installed version on each launch (user-scoped, takes effect for the
+// GPU process spawned right after this).
+try {
+	const base = "C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application";
+	for (const entry of readdirSync(base)) {
+		const exe = `${base}\\${entry}\\msedgewebview2.exe`;
+		if (!existsSync(exe)) continue;
+		Bun.spawnSync([
+			"reg",
+			"add",
+			"HKCU\\Software\\Microsoft\\DirectX\\UserGpuPreferences",
+			"/v",
+			exe,
+			"/t",
+			"REG_SZ",
+			"/d",
+			"GpuPreference=2;",
+			"/f",
+		]);
+	}
+} catch (e) {
+	console.log(`[murmuration:host] gpu preference setup skipped: ${e}`);
+}
 
 // ── Murmuration host ─────────────────────────────────────────────
 // The experience runs inside the webview (WebView2 exposes
