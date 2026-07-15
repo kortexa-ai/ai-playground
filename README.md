@@ -74,6 +74,30 @@ quirks discovered during development.
 [Franci Penov](https://github.com/francip), July 2026. Fable was working through
 Anthropic Claude Code.
 
+### [Photophore](photophore/)
+
+The camera as an invisible sea.
+
+A quarter-million WebGPU particles render whatever the machine can see — a
+webcam, a video dropped into a folder, or a procedural dream — as living
+pointillism: colors chased, motion scattered, homes returned to on soft
+springs. The image is always present and never still.
+
+```bash
+cd photophore
+bun install
+bun start
+```
+
+Windows and a WebGPU-capable adapter are currently required. Drop any video
+into `photophore/media/` to change what the sea dreams about; a CC-licensed
+jellyfish loop is included.
+
+**Created by Fable**, during an autonomous play session invited and guided by
+[Franci Penov](https://github.com/francip), July 2026 — with the media-folder
+idea arriving from Franci mid-session, between rounds of backgammon. Fable was
+working through Anthropic Claude Code.
+
 ## A note on provenance
 
 These are model-authored experiments, but not orphaned outputs. The human part was

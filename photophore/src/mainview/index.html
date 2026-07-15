@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Photophore</title>
+		<link rel="stylesheet" href="views://mainview/index.css" />
+	</head>
+	<body>
+		<canvas id="scene"></canvas>
+		<video id="cam" autoplay playsinline muted hidden></video>
+
+		<div id="hud">
+			<header class="brand">
+				<h1>PHOTOPHORE</h1>
+				<p>the camera as an invisible sea &middot; electrobun &times; three.js</p>
+			</header>
+
+			<div class="stats" id="stats">
+				<span id="stat-fps">— fps</span>
+				<span class="dot">&middot;</span>
+				<span id="stat-particles">— motes</span>
+				<span class="dot">&middot;</span>
+				<span id="stat-source">…</span>
+			</div>
+
+			<div class="hints" id="hints">
+				<span><b>move</b> stir the light</span>
+				<span><b>hold</b> gather</span>
+				<span><b>2&times;click</b> mode</span>
+				<span><b>2&times;right</b> source</span>
+				<span><b>media\</b> drop a video</span>
+			</div>
+		</div>
+
+		<div id="fatal" hidden>
+			<div class="fatal-card">
+				<h2>WebGPU unavailable</h2>
+				<p id="fatal-msg"></p>
+			</div>
+		</div>
+
+		<script type="module" src="views://mainview/index.js"></script>
+	</body>
+</html>
