@@ -12,6 +12,8 @@ type PhotophoreRPC = {
 				frameMs: number;
 				backend: string;
 			};
+			pickVideo: {};
+			pickUrl: {};
 		};
 	};
 	webview: {
@@ -20,11 +22,18 @@ type PhotophoreRPC = {
 			input: {
 				nx: number;
 				ny: number;
+				fw: number;
+				fh: number;
 				inside: boolean;
 				left: boolean;
 				right: boolean;
 			};
-			mediaBegin: { name: string; mime: string; totalBytes: number };
+			mediaBegin: {
+				name: string;
+				mime: string;
+				totalBytes: number;
+				explicit: boolean;
+			};
 			mediaChunk: { b64: string };
 			mediaEnd: {};
 		};
@@ -34,6 +43,8 @@ type PhotophoreRPC = {
 export interface PumpInput {
 	nx: number;
 	ny: number;
+	fw: number;
+	fh: number;
 	inside: boolean;
 	left: boolean;
 	right: boolean;
@@ -48,13 +59,18 @@ export function onPumpInput(cb: (s: PumpInput) => void) {
 
 // Media files stream from the bun process in base64 chunks and become
 // Blob URLs (same-origin, so canvas readback stays untainted).
-let mediaSink: ((name: string, blobUrl: string) => void) | null = null;
-export function onMediaFilm(cb: (name: string, blobUrl: string) => void) {
+let mediaSink:
+	| ((name: string, blobUrl: string, explicit: boolean) => void)
+	| null = null;
+export function onMediaFilm(
+	cb: (name: string, blobUrl: string, explicit: boolean) => void,
+) {
 	mediaSink = cb;
 }
 
 let mediaName = "";
 let mediaMime = "";
+let mediaExplicit = false;
 let mediaParts: Uint8Array[] = [];
 
 const rpc = Electroview.defineRPC<PhotophoreRPC>({
@@ -65,9 +81,10 @@ const rpc = Electroview.defineRPC<PhotophoreRPC>({
 			input: (s) => {
 				inputSink?.(s);
 			},
-			mediaBegin: ({ name, mime, totalBytes }) => {
+			mediaBegin: ({ name, mime, totalBytes, explicit }) => {
 				mediaName = name;
 				mediaMime = mime;
+				mediaExplicit = explicit;
 				mediaParts = [];
 				blog("info", `media incoming: ${name} (${(totalBytes / 1e6).toFixed(1)}MB)`);
 			},
@@ -82,7 +99,7 @@ const rpc = Electroview.defineRPC<PhotophoreRPC>({
 				mediaParts = [];
 				const url = URL.createObjectURL(blob);
 				blog("info", `media assembled: ${mediaName} (${(blob.size / 1e6).toFixed(1)}MB)`);
-				mediaSink?.(mediaName, url);
+				mediaSink?.(mediaName, url, mediaExplicit);
 			},
 		},
 	},
@@ -110,6 +127,18 @@ export function sendStats(stats: {
 }) {
 	try {
 		electrobun.rpc?.send?.stats(stats);
+	} catch {}
+}
+
+export function requestVideoPick() {
+	try {
+		electrobun.rpc?.send?.pickVideo({});
+	} catch {}
+}
+
+export function requestUrlPick() {
+	try {
+		electrobun.rpc?.send?.pickUrl({});
 	} catch {}
 }
 

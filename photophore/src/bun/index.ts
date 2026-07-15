@@ -7,7 +7,7 @@
 process.env.WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS =
 	"--enable-unsafe-webgpu --enable-dawn-features=use_dxc,allow_unsafe_apis --use-fake-ui-for-media-stream";
 
-import { BrowserView, BrowserWindow, Screen } from "electrobun/bun";
+import { BrowserView, BrowserWindow, Screen, Utils } from "electrobun/bun";
 import { existsSync, readdirSync, statSync, watch } from "fs";
 import { resolve, extname, basename } from "path";
 
@@ -50,6 +50,8 @@ export type PhotophoreRPC = {
 				frameMs: number;
 				backend: string;
 			};
+			pickVideo: {};
+			pickUrl: {};
 		};
 	};
 	webview: {
@@ -58,11 +60,18 @@ export type PhotophoreRPC = {
 			input: {
 				nx: number;
 				ny: number;
+				fw: number; // window frame size in px, for client-coord mapping
+				fh: number;
 				inside: boolean;
 				left: boolean;
 				right: boolean;
 			};
-			mediaBegin: { name: string; mime: string; totalBytes: number };
+			mediaBegin: {
+				name: string;
+				mime: string;
+				totalBytes: number;
+				explicit: boolean;
+			};
 			mediaChunk: { b64: string };
 			mediaEnd: {};
 		};
@@ -82,9 +91,60 @@ const rpc = BrowserView.defineRPC<PhotophoreRPC>({
 					`[photophore:stats] fps=${fps} particles=${particles} source=${source} frame=${frameMs}ms backend=${backend}`,
 				);
 			},
+			pickVideo: () => void pickVideo(),
+			pickUrl: () => void pickUrl(),
 		},
 	},
 });
+
+async function pickVideo() {
+	try {
+		const paths = await Utils.openFileDialog({
+			startingFolder: "~/",
+			allowedFileTypes: "*",
+			canChooseFiles: true,
+			canChooseDirectory: false,
+			allowsMultipleSelection: false,
+		});
+		const file = paths.find((p) => p && extname(p).toLowerCase() in MIME);
+		if (file) {
+			await sendMedia(file, true);
+		} else if (paths[0]) {
+			console.log(`[photophore:host] picked non-video file: ${paths[0]}`);
+		}
+	} catch (e) {
+		console.log(`[photophore:host] file dialog failed: ${e}`);
+	}
+}
+
+async function pickUrl() {
+	try {
+		// no native text-input dialog in electrobun — a VB InputBox is a
+		// real OS modal, which conveniently dodges the broken webview input
+		const proc = Bun.spawn(
+			[
+				"powershell",
+				"-NoProfile",
+				"-STA",
+				"-Command",
+				"Add-Type -AssemblyName Microsoft.VisualBasic; [Microsoft.VisualBasic.Interaction]::InputBox('Paste a video URL (mp4 / webm):','Photophore — paint from a URL','')",
+			],
+			{ stdout: "pipe" },
+		);
+		const url = (await new Response(proc.stdout).text()).trim();
+		if (!/^https?:\/\//i.test(url)) return;
+		if (!mediaDir) return;
+		const ext = (url.match(/\.(webm|mp4|m4v|mov|mkv)(\?|$)/i)?.[1] ?? "mp4").toLowerCase();
+		const target = resolve(mediaDir, `downloaded.${ext}`);
+		console.log(`[photophore:host] downloading ${url}`);
+		const res = await fetch(url);
+		if (!res.ok) throw new Error(`http ${res.status}`);
+		await Bun.write(target, await res.arrayBuffer());
+		await sendMedia(target, true);
+	} catch (e) {
+		console.log(`[photophore:host] url pick failed: ${e}`);
+	}
+}
 
 const display = Screen.getPrimaryDisplay();
 const wa = display.workArea;
@@ -118,6 +178,8 @@ const inputTimer = setInterval(() => {
 		rpc.send?.input({
 			nx,
 			ny,
+			fw: frame.width,
+			fh: frame.height,
 			inside,
 			left: (buttons & 1n) === 1n,
 			right: (buttons & 2n) === 2n,
@@ -172,10 +234,10 @@ function newestVideo(dir: string): string | null {
 let lastSent = "";
 let sending = false;
 
-async function sendMedia(file: string) {
+async function sendMedia(file: string, explicit: boolean) {
 	if (sending) return;
 	const key = `${file}:${statSync(file).mtimeMs}`;
-	if (key === lastSent) return;
+	if (key === lastSent && !explicit) return;
 	sending = true;
 	try {
 		const bytes = new Uint8Array(await Bun.file(file).arrayBuffer());
@@ -185,7 +247,7 @@ async function sendMedia(file: string) {
 		}
 		const mime = MIME[extname(file).toLowerCase()] ?? "video/webm";
 		console.log(`[photophore:host] streaming media: ${basename(file)} (${(bytes.length / 1e6).toFixed(1)}MB)`);
-		rpc.send?.mediaBegin({ name: basename(file), mime, totalBytes: bytes.length });
+		rpc.send?.mediaBegin({ name: basename(file), mime, totalBytes: bytes.length, explicit });
 		const CHUNK = 180 * 1024;
 		for (let o = 0; o < bytes.length; o += CHUNK) {
 			rpc.send?.mediaChunk({ b64: Buffer.from(bytes.subarray(o, o + CHUNK)).toString("base64") });
@@ -222,19 +284,20 @@ const mediaDir = findMediaDir();
 if (mediaDir) {
 	console.log(`[photophore:host] media dir: ${mediaDir}`);
 	let debounce: ReturnType<typeof setTimeout> | null = null;
-	const rescan = () => {
+	const rescan = (explicit: boolean) => {
 		if (debounce) clearTimeout(debounce);
 		debounce = setTimeout(async () => {
 			await fetchUrlFile(mediaDir);
 			const v = newestVideo(mediaDir);
-			if (v) await sendMedia(v);
+			if (v) await sendMedia(v, explicit);
 		}, 1200);
 	};
 	try {
-		watch(mediaDir, rescan);
+		// a live drop is explicit intent — it takes the stage
+		watch(mediaDir, () => rescan(true));
 	} catch {}
-	// initial send once the webview has had time to boot
-	setTimeout(rescan, 4000);
+	// boot scan only loads the film; dream keeps the stage until asked
+	setTimeout(() => rescan(false), 4000);
 } else {
 	console.log("[photophore:host] no media dir found");
 }

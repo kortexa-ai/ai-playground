@@ -3,7 +3,15 @@ import { pass, screenUV, length as tslLength, float, smoothstep } from "three/ts
 import { bloom } from "three/addons/tsl/display/BloomNode.js";
 import { afterImage } from "three/addons/tsl/display/AfterImageNode.js";
 
-import { blog, sendStats, onPumpInput, onMediaFilm, type PumpInput } from "./rpc";
+import {
+	blog,
+	sendStats,
+	onPumpInput,
+	onMediaFilm,
+	requestVideoPick,
+	requestUrlPick,
+	type PumpInput,
+} from "./rpc";
 import { FieldPipeline, createSourceManager, type FieldSource } from "./field";
 import { createParticles, SLAB_W, SLAB_H } from "./particles";
 import { createHud } from "./hud";
@@ -69,14 +77,68 @@ async function main() {
 	const hud = createHud();
 	const particles = createParticles(scene, PARTICLES, pipeline.texture);
 
+	// ── Source buttons (clicks arrive via the pump's elementFromPoint
+	// routing below — DOM events never fire natively on Windows)
+	const btnVideo = document.getElementById("btn-video") as HTMLButtonElement;
+	const btnUrl = document.getElementById("btn-url") as HTMLButtonElement;
+	const btnDream = document.getElementById("btn-dream") as HTMLButtonElement;
+
+	const syncButtons = (s: FieldSource) => {
+		btnDream.classList.toggle("active", s.kind === "dream");
+		btnVideo.classList.toggle("active", s.kind === "film");
+		btnUrl.classList.toggle("active", false);
+	};
+
 	let source: FieldSource;
 	const sources = createSourceManager(video, (s) => {
 		source = s;
 		hud.setSource(s.label, particles.mode.name);
+		syncButtons(s);
 	});
 	source = sources.current;
 	hud.setSource(source.label, particles.mode.name);
-	onMediaFilm((name, blobUrl) => void sources.setFilm(name, blobUrl));
+	syncButtons(source);
+	onMediaFilm((name, blobUrl, explicit) =>
+		void sources.setFilm(name, blobUrl, explicit),
+	);
+
+	// Real DOM clicks arrive on current WebView2 runtimes; the pump's
+	// elementFromPoint route covers older ones where they don't. The
+	// debounce keeps the two paths from double-firing a button.
+	const debounced = (fn: () => void) => {
+		let last = 0;
+		return () => {
+			const now = performance.now();
+			if (now - last < 350) return;
+			last = now;
+			fn();
+		};
+	};
+
+	btnVideo.addEventListener(
+		"click",
+		debounced(() => {
+			// first click stages the loaded film; click again (or with none
+			// loaded) to open the native picker
+			if (source.kind !== "film" && sources.useFilm()) return;
+			blog("info", "video button → native file dialog");
+			requestVideoPick();
+		}),
+	);
+	btnUrl.addEventListener(
+		"click",
+		debounced(() => {
+			blog("info", "url button → native input box");
+			requestUrlPick();
+		}),
+	);
+	btnDream.addEventListener(
+		"click",
+		debounced(() => {
+			blog("info", "dream button");
+			sources.useDream();
+		}),
+	);
 
 	// ── Post: afterimage trails + bloom + vignette ────────────────
 	const postProcessing = new THREE.PostProcessing(renderer);
@@ -96,10 +158,30 @@ async function main() {
 	}
 
 	// ── Input via bun pump ────────────────────────────────────────
-	const prev: PumpInput = { nx: 0.5, ny: 0.5, inside: false, left: false, right: false };
+	const prev: PumpInput = {
+		nx: 0.5,
+		ny: 0.5,
+		fw: 1,
+		fh: 1,
+		inside: false,
+		left: false,
+		right: false,
+	};
 	let lastLeftDownAt = 0;
 	let lastRightDownAt = 0;
 	let pointerHeld = false;
+	let pressConsumedByUi = false;
+
+	// window frame coords (physical px) → CSS client coords, accounting
+	// for DPR, the title bar, and Win11's invisible resize borders
+	const toClient = (s: PumpInput) => {
+		const dpr = window.devicePixelRatio || 1;
+		const cssFw = s.fw / dpr;
+		const cssFh = s.fh / dpr;
+		const borderX = Math.max(0, (cssFw - window.innerWidth) / 2);
+		const topOffset = cssFh - window.innerHeight - borderX;
+		return { x: s.nx * cssFw - borderX, y: s.ny * cssFh - topOffset };
+	};
 
 	onPumpInput((s) => {
 		const now = performance.now();
@@ -110,15 +192,27 @@ async function main() {
 				(0.5 - s.ny) * SLAB_H,
 			);
 		}
+		// left down edge: HUD buttons first (DOM clicks never arrive
+		// natively on Windows — synthesize via elementFromPoint)
 		if (s.left && !prev.left && s.inside) {
-			if (now - lastLeftDownAt < 400) {
-				const m = particles.cycleMode();
-				hud.setSource(source.label, m.name);
-				blog("info", `mode → ${m.name}`);
+			const c = toClient(s);
+			const el = document.elementFromPoint(c.x, c.y);
+			const hit = el?.closest?.("button") as HTMLButtonElement | null;
+			if (hit) {
+				pressConsumedByUi = true;
+				hit.click();
+			} else {
+				pressConsumedByUi = false;
+				if (now - lastLeftDownAt < 400) {
+					const m = particles.cycleMode();
+					hud.setSource(source.label, m.name);
+					blog("info", `mode → ${m.name}`);
+				}
+				lastLeftDownAt = now;
 			}
-			lastLeftDownAt = now;
 		}
-		pointerHeld = s.left && s.inside;
+		if (!s.left) pressConsumedByUi = false;
+		pointerHeld = s.left && s.inside && !pressConsumedByUi;
 		if (s.right && !prev.right && s.inside) {
 			if (now - lastRightDownAt < 450) {
 				sources.toggle();
@@ -127,6 +221,8 @@ async function main() {
 		}
 		prev.nx = s.nx;
 		prev.ny = s.ny;
+		prev.fw = s.fw;
+		prev.fh = s.fh;
 		prev.inside = s.inside;
 		prev.left = s.left;
 		prev.right = s.right;

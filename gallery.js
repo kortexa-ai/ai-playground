@@ -138,6 +138,7 @@
       if (this.kind === "signals") this.makeSignals();
       if (this.kind === "letters") this.makeLetters();
       if (this.kind === "murmuration") this.makeMurmuration();
+      if (this.kind === "photophore") this.makePhotophore();
       this.draw(3.4);
     }
 
@@ -244,6 +245,109 @@
       if (this.kind === "signals") this.drawSignals(time);
       if (this.kind === "letters") this.drawLetters(time);
       if (this.kind === "murmuration") this.drawMurmuration(time);
+      if (this.kind === "photophore") this.drawPhotophore(time);
+    }
+
+    makePhotophore() {
+      const count = clamp(
+        Math.round((this.width * this.height) / 620),
+        420,
+        980,
+      );
+      this.points = Array.from({ length: count }, (_, index) => ({
+        x: randomAt(index, 40),
+        y: randomAt(index, 41),
+        size: 0.6 + randomAt(index, 42) * 1.3,
+        phase: randomAt(index, 43) * TAU,
+        jitter: 0.35 + randomAt(index, 44) * 0.85,
+      }));
+    }
+
+    drawPhotophore(time) {
+      const context = this.context;
+      const deep = context.createLinearGradient(0, 0, 0, this.height);
+      deep.addColorStop(0, "#04121b");
+      deep.addColorStop(0.6, "#03212b");
+      deep.addColorStop(1, "#020a10");
+      context.fillStyle = deep;
+      context.fillRect(0, 0, this.width, this.height);
+
+      // invisible field the motes can feel: two drifting warm-cool orbs,
+      // one dark wandering jelly, one slow comet
+      const orbs = [
+        {
+          x: 0.32 + Math.sin(time * 0.09) * 0.14,
+          y: 0.38 + Math.cos(time * 0.07) * 0.12,
+          r: 0.34,
+          hue: 172,
+        },
+        {
+          x: 0.71 + Math.sin(time * 0.06 + 2.1) * 0.12,
+          y: 0.6 + Math.cos(time * 0.08 + 1.2) * 0.13,
+          r: 0.3,
+          hue: 196,
+        },
+      ];
+      const jelly = {
+        x: 0.5 + Math.sin(time * 0.045 + 4.2) * 0.3,
+        y: 0.42 + Math.cos(time * 0.035 + 0.8) * 0.2,
+        r: 0.17,
+      };
+      const cometCycle = (time % 11) / 11;
+      const comet = {
+        x: -0.1 + cometCycle * 1.2,
+        y: 0.3 + Math.sin(cometCycle * 5.2) * 0.14,
+        on: cometCycle > 0.02 && cometCycle < 0.98,
+      };
+
+      context.globalCompositeOperation = "lighter";
+      const aspect = this.width / Math.max(this.height, 1);
+      for (const point of this.points) {
+        const jx =
+          point.x + Math.sin(time * 0.5 * point.jitter + point.phase) * 0.004;
+        const jy =
+          point.y +
+          Math.cos(time * 0.42 * point.jitter + point.phase * 1.7) * 0.004;
+
+        let light = 0.05;
+        let hue = 188;
+        for (const orb of orbs) {
+          const dx = (jx - orb.x) * aspect;
+          const dy = jy - orb.y;
+          const d = Math.sqrt(dx * dx + dy * dy);
+          const glow = Math.max(0, 1 - d / orb.r);
+          if (glow > 0) {
+            light += glow * glow * 0.85;
+            hue = lerp(hue, orb.hue, glow);
+          }
+        }
+        {
+          const dx = (jx - jelly.x) * aspect;
+          const dy = jy - jelly.y;
+          const d = Math.sqrt(dx * dx + dy * dy);
+          const shadow = Math.max(0, 1 - d / jelly.r);
+          light *= 1 - shadow * 0.85;
+        }
+        if (comet.on) {
+          const dx = (jx - comet.x) * aspect;
+          const dy = jy - comet.y;
+          const d = Math.sqrt(dx * dx + dy * dy);
+          const spark = Math.max(0, 1 - d / 0.09);
+          light += spark * spark * 1.3;
+        }
+        const twinkle =
+          0.75 + Math.sin(time * 1.7 * point.jitter + point.phase) * 0.25;
+        const alpha = clamp(light * twinkle, 0.015, 0.95);
+        context.fillStyle =
+          "hsla(" + hue + ", 62%, " + (52 + light * 22) + "%, " + alpha + ")";
+        context.fillRect(
+          jx * this.width,
+          jy * this.height,
+          point.size,
+          point.size,
+        );
+      }
+      context.globalCompositeOperation = "source-over";
     }
 
     drawSignals(time) {
@@ -446,41 +550,47 @@
   );
   previews.forEach((study) => intersectionObserver.observe(study.canvas));
 
-  const copyButton = document.getElementById("copy-command");
-  const command = [
-    "git clone https://github.com/kortexa-ai/ai-playground.git",
-    "cd ai-playground/murmuration",
-    "bun install",
-    "bun start",
-  ].join("\n");
+  function wireCopyButton(buttonId, project) {
+    const button = document.getElementById(buttonId);
+    if (!button) return;
+    const command = [
+      "git clone https://github.com/kortexa-ai/ai-playground.git",
+      "cd ai-playground/" + project,
+      "bun install",
+      "bun start",
+    ].join("\n");
 
-  async function copyCommand() {
-    try {
-      if (navigator.clipboard && window.isSecureContext) {
-        await navigator.clipboard.writeText(command);
-      } else {
-        const area = document.createElement("textarea");
-        area.value = command;
-        area.style.position = "fixed";
-        area.style.opacity = "0";
-        document.body.appendChild(area);
-        area.select();
-        document.execCommand("copy");
-        area.remove();
+    async function copyCommand() {
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(command);
+        } else {
+          const area = document.createElement("textarea");
+          area.value = command;
+          area.style.position = "fixed";
+          area.style.opacity = "0";
+          document.body.appendChild(area);
+          area.select();
+          document.execCommand("copy");
+          area.remove();
+        }
+        button.textContent = "copied";
+        button.setAttribute("aria-label", "Commands copied");
+        setTimeout(() => {
+          button.textContent = "copy";
+          button.setAttribute("aria-label", "Copy run commands");
+        }, 1500);
+      } catch {
+        button.textContent = "select + copy";
       }
-      copyButton.textContent = "copied";
-      copyButton.setAttribute("aria-label", "Commands copied");
-      setTimeout(() => {
-        copyButton.textContent = "copy";
-        copyButton.setAttribute("aria-label", "Copy run commands");
-      }, 1500);
-    } catch {
-      copyButton.textContent = "select + copy";
     }
+
+    button.setAttribute("aria-label", "Copy run commands");
+    button.addEventListener("click", copyCommand);
   }
 
-  copyButton.setAttribute("aria-label", "Copy run commands");
-  copyButton.addEventListener("click", copyCommand);
+  wireCopyButton("copy-command", "murmuration");
+  wireCopyButton("copy-command-photophore", "photophore");
 
   document.addEventListener("visibilitychange", () => {
     pageVisible = !document.hidden;

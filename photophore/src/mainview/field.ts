@@ -277,17 +277,24 @@ export function createSourceManager(
 		get current() {
 			return current;
 		},
-		async setFilm(name: string, blobUrl: string) {
+		async setFilm(name: string, blobUrl: string, stage: boolean) {
 			try {
 				const next = await createFilmSource(name, blobUrl);
 				const old = film;
 				film = next;
-				// new film takes the stage unless a live camera is running
-				if (current.kind !== "camera") setSource(film);
+				// explicit picks take the stage; background loads wait politely
+				if (stage) setSource(film);
 				if (old && old !== current) old.dispose?.();
 			} catch (e) {
 				blog("error", "film failed to play:", e as Error);
 			}
+		},
+		useDream() {
+			setSource(dream);
+		},
+		useFilm() {
+			if (film) setSource(film);
+			return film !== null;
 		},
 		toggle() {
 			const ring: FieldSource[] = [

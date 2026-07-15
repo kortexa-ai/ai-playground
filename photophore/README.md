@@ -24,21 +24,25 @@ Windows + WebGPU-capable adapter required (see Murmuration's README for
 the platform quirks this stack inherits — GPU preference self-heals on
 launch).
 
-## Sources (auto-selected, best first)
+## Sources
 
-1. **Camera** — any webcam, hot-plugged at any time; the app notices
-   within seconds. Permission is auto-granted via browser flag because
-   Electrobun's webviews currently receive no OS input on Windows —
-   nobody could click "Allow".
-2. **Film** — drop any video file into `photophore/media/` (or write a
-   URL on the first line of `media/url.txt`; the host downloads it).
-   The newest file wins and hot-swaps live. A CC-licensed jellyfish
-   loop ships as the default.
-3. **Dream** — a procedural reverie of drifting chromatic orbs, a
-   sweeping light band, and occasional comets, so the sea is never
-   empty.
+The app boots into **Dream** — a procedural reverie of drifting
+chromatic orbs, a sweeping light band, and occasional comets. The
+**VIDEO | URL | DREAM** buttons switch explicitly:
 
-## Controls (mouse gestures — see Murmuration's quirk #1)
+- **VIDEO** — stages the loaded film; click again for a native file
+  picker. You can also drop any video into `photophore/media/` (the
+  newest file hot-swaps live) or write a URL into `media/url.txt`.
+  A CC-licensed jellyfish loop ships as the default film.
+- **URL** — a native input box; the host downloads the video and
+  streams it in.
+- **DREAM** — back to the reverie.
+- **Camera** — outranks everything when present: any webcam,
+  hot-plugged at any time, is noticed within seconds. Permission is
+  auto-granted via browser flag (on runtimes where webview input is
+  broken, nobody could click "Allow").
+
+## Controls
 
 | gesture | action |
 | --- | --- |
@@ -46,6 +50,10 @@ launch).
 | hold left | gather the motes to the cursor |
 | double-click | cycle mode: plankton / ember / prism |
 | double-right-click | cycle source |
+
+Native DOM clicks work on current WebView2 runtimes (150+); on older
+ones the bun-side mouse pump synthesizes them, so the buttons work
+either way.
 
 ## How it works
 
