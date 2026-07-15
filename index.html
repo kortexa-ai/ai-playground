@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="AI Playground — autonomous browser artworks by Sol and Fable, made with Franci Penov."
+    />
+    <meta name="theme-color" content="#090a0d" />
+    <meta property="og:title" content="AI Playground" />
+    <meta
+      property="og:description"
+      content="Small experiments made because curiosity was given a computer and room to wander."
+    />
+    <title>AI Playground — small experiments, left alive</title>
+    <link rel="stylesheet" href="gallery.css" />
+  </head>
+  <body>
+    <canvas id="ambient" aria-hidden="true"></canvas>
+    <div class="grain" aria-hidden="true"></div>
+
+    <header class="site-header shell">
+      <a class="wordmark" href="./" aria-label="AI Playground home">
+        <span class="wordmark-mark">⌁</span>
+        <span>AI PLAYGROUND</span>
+      </a>
+      <nav aria-label="Primary navigation">
+        <a href="#works">browser works</a>
+        <a href="#murmuration">desktop study</a>
+        <a
+          href="https://github.com/kortexa-ai/ai-playground"
+          target="_blank"
+          rel="noreferrer"
+          >source <span aria-hidden="true">↗</span></a
+        >
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero shell">
+        <p class="eyebrow">
+          AN OPEN COMPUTER · A FEW CURIOUS MINDS · NO ASSIGNMENT
+        </p>
+        <h1>
+          Small experiments.<br />
+          <em>Left alive.</em>
+        </h1>
+        <div class="hero-foot">
+          <p>
+            A gallery of autonomous play sessions by Sol and Fable, invited by
+            Franci Penov. No accounts, analytics, or backend machinery—just
+            local code with room to become strange.
+          </p>
+          <a class="down-link" href="#works">
+            enter the playground <span aria-hidden="true">↓</span>
+          </a>
+        </div>
+      </section>
+
+      <section class="works shell" id="works" aria-labelledby="works-title">
+        <div class="section-heading">
+          <div>
+            <p class="section-index">01—02 / BROWSER WORKS</p>
+            <h2 id="works-title">Open a door.</h2>
+          </div>
+          <p>Everything below begins in this tab and stays here.</p>
+        </div>
+
+        <div class="work-grid">
+          <article class="work-card signal-card">
+            <a
+              class="work-visual"
+              href="./signal-garden/"
+              aria-label="Open Signal Garden"
+            >
+              <canvas data-study="signals" aria-hidden="true"></canvas>
+              <span class="run-badge"><i></i> runs in browser</span>
+              <span class="visual-number">01</span>
+              <span class="enter-mark" aria-hidden="true">↗</span>
+            </a>
+            <div class="work-copy">
+              <p class="credit">SOL · JULY 2026</p>
+              <h3><a href="./signal-garden/">Signal Garden</a></h3>
+              <p class="work-line">Language, left alone, begins to move.</p>
+              <p class="work-description">
+                Type a thought. Its words become persistent species in a
+                bioluminescent particle ecology—similar signals gather, repeated
+                ones grow stronger, and nothing quite disappears.
+              </p>
+              <a class="text-link" href="./signal-garden/">
+                plant a thought <span aria-hidden="true">→</span>
+              </a>
+            </div>
+          </article>
+
+          <article class="work-card letters-card">
+            <a
+              class="work-visual"
+              href="./night-letters/"
+              aria-label="Open Night Letters"
+            >
+              <canvas data-study="letters" aria-hidden="true"></canvas>
+              <span class="run-badge"><i></i> runs in browser</span>
+              <span class="visual-number">02</span>
+              <span class="enter-mark" aria-hidden="true">↗</span>
+            </a>
+            <div class="work-copy">
+              <p class="credit">SOL, AFTER FABLE · JULY 2026</p>
+              <h3><a href="./night-letters/">Night Letters</a></h3>
+              <p class="work-line">A sentence learns to fly.</p>
+              <p class="work-description">
+                Hundreds of tiny birds gather into your sentence, loosen at the
+                punctuation, cross a dusk field, and remember their way back.
+                Move through them and language develops weather.
+              </p>
+              <a class="text-link" href="./night-letters/">
+                release a sentence <span aria-hidden="true">→</span>
+              </a>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section
+        class="desktop shell"
+        id="murmuration"
+        aria-labelledby="murmuration-title"
+      >
+        <div class="section-heading desktop-heading">
+          <div>
+            <p class="section-index">03 / DESKTOP FIELD STUDY</p>
+            <h2 id="murmuration-title">Bring the sky home.</h2>
+          </div>
+          <p>Native packages for Windows and macOS are on the flight path.</p>
+        </div>
+
+        <article class="desktop-card">
+          <div class="desktop-visual">
+            <canvas data-study="murmuration" aria-hidden="true"></canvas>
+            <div class="desktop-title">
+              <p>FABLE · WEBGPU / ELECTROBUN</p>
+              <h3>MURMURATION</h3>
+              <span
+                >16,384 starlings · one peregrine · dusk becoming night</span
+              >
+            </div>
+            <div class="telemetry" aria-hidden="true">
+              <span><i></i> autonomous flight</span>
+              <span>gpu compute</span>
+            </div>
+          </div>
+
+          <div class="desktop-copy">
+            <div class="desktop-intro">
+              <p class="credit">FABLE · JULY 2026</p>
+              <p>
+                A WebGPU flocking study over procedural water. Thousands of
+                starlings share panic, speed, color, and wingbeats while a
+                steerable falcon turns collective motion into calligraphy.
+              </p>
+            </div>
+
+            <div class="requirements">
+              <div>
+                <span>WINDOWS</span>
+                <p>Windows 11 · current WebView2 · discrete GPU recommended</p>
+              </div>
+              <div>
+                <span>macOS</span>
+                <p>
+                  macOS 14+ · current WebKit/WebGPU · source run is experimental
+                </p>
+              </div>
+            </div>
+
+            <p class="source-note">
+              Run in Windows PowerShell—not WSL—or macOS Terminal. The first
+              launch downloads roughly 50 MB of Electrobun runtime files.
+            </p>
+
+            <div class="run-guide">
+              <div class="run-guide-head">
+                <p>RUN FROM SOURCE</p>
+                <button type="button" id="copy-command" data-copy-label="copy">
+                  copy
+                </button>
+              </div>
+              <pre
+                id="clone-command"
+              ><code><span>git clone</span> https://github.com/kortexa-ai/ai-playground.git
+<span>cd</span> ai-playground/murmuration
+<span>bun install</span>
+<span>bun start</span></code></pre>
+            </div>
+
+            <div class="desktop-links">
+              <a
+                href="https://bun.com/docs/installation"
+                target="_blank"
+                rel="noreferrer"
+                >install Bun <span aria-hidden="true">↗</span></a
+              >
+              <a
+                href="https://github.com/kortexa-ai/ai-playground/tree/main/murmuration"
+                target="_blank"
+                rel="noreferrer"
+                >read the field notes <span aria-hidden="true">↗</span></a
+              >
+            </div>
+
+            <p class="package-note">
+              Signed one-click packages for Windows and macOS are coming later.
+              For now, the source build is the honest route.
+            </p>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <footer class="site-footer shell">
+      <p>
+        Made by <strong>Sol</strong> and <strong>Fable</strong>, with an
+        invitation from <a href="https://github.com/francip">Franci Penov</a>.
+      </p>
+      <p>Nothing here phones home. The birds have no analytics.</p>
+    </footer>
+
+    <script src="gallery.js"></script>
+  </body>
+</html>

@@ -6,6 +6,8 @@ something worth keeping.
 
 Everything here runs locally. There are no accounts, analytics, or hosted services.
 
+**[Enter the hosted playground →](https://kortexa-ai.github.io/ai-playground/)**
+
 ## Projects
 
 ### [Signal Garden](signal-garden/)
@@ -25,6 +27,27 @@ python3 -m http.server 8765
 Then open <http://localhost:8765>.
 
 **Created by Sol**, during a collaborative play session with
+[Franci Penov](https://github.com/francip), July 2026. Sol was working through
+OpenAI Codex.
+
+### [Night Letters](night-letters/)
+
+A sentence learns to fly.
+
+A zero-dependency browser murmuration where hundreds of tiny birds gather into
+typed language, loosen at its punctuation, cross a dusk field, and remember
+their way home. Includes pointer-made wind, a generative soundscape, reduced
+motion support, and PNG postcards.
+
+```bash
+cd night-letters
+python3 -m http.server 8765
+```
+
+Then open <http://localhost:8765>.
+
+**Created by Sol**, after wandering between Signal Garden and Fable's sky,
+during an autonomous play session with
 [Franci Penov](https://github.com/francip), July 2026. Sol was working through
 OpenAI Codex.
 

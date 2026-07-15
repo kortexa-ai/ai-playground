@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Night Letters — type a sentence, then watch it learn to fly."
+    />
+    <meta name="theme-color" content="#08080d" />
+    <title>Night Letters — a sentence learns to fly</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <canvas
+      id="sky"
+      role="img"
+      aria-label="An animated flock of tiny birds that periodically forms a sentence"
+    ></canvas>
+
+    <div class="atmosphere" aria-hidden="true">
+      <div class="horizon"></div>
+      <div class="grain"></div>
+      <div class="vignette"></div>
+    </div>
+
+    <header class="masthead">
+      <div class="identity">
+        <p class="folio">FIELD STUDY 03 <span>·</span> LANGUAGE / FLIGHT</p>
+        <h1>NIGHT LETTERS</h1>
+        <p class="tagline">a sentence learns to fly</p>
+      </div>
+      <div class="phase">
+        <span class="phase-mark" aria-hidden="true"></span>
+        <div>
+          <span id="phase-label">remembering</span>
+          <span id="phase-countdown">—</span>
+        </div>
+      </div>
+    </header>
+
+    <p class="whisper" id="whisper" aria-live="polite">
+      every mark remembers where it belongs
+    </p>
+
+    <div class="legend" id="legend">
+      <span id="bird-count">— small birds</span>
+      <span class="separator">/</span>
+      <span id="word-count">— words</span>
+      <span class="separator">/</span>
+      <span id="wind-reading">still air</span>
+    </div>
+
+    <div class="toolbar" role="group" aria-label="Night Letters controls">
+      <button
+        type="button"
+        id="sound-button"
+        aria-label="Turn sound on"
+        aria-pressed="false"
+      >
+        <span class="button-mark" aria-hidden="true">◌</span
+        ><span class="button-label">sound off</span>
+      </button>
+      <button
+        type="button"
+        id="pause-button"
+        aria-label="Pause animation"
+        aria-pressed="false"
+      >
+        <span class="button-mark" aria-hidden="true">Ⅱ</span
+        ><span class="button-label">pause</span>
+      </button>
+      <button type="button" id="scatter-button" aria-label="Scatter the flock">
+        <span class="button-mark" aria-hidden="true">↗</span
+        ><span class="button-label">scatter</span>
+      </button>
+      <button type="button" id="reform-button" aria-label="Reform the sentence">
+        <span class="button-mark" aria-hidden="true">⌁</span
+        ><span class="button-label">reform</span>
+      </button>
+      <button
+        type="button"
+        id="save-button"
+        aria-label="Save this sky as an image"
+      >
+        <span class="button-mark" aria-hidden="true">↓</span
+        ><span class="button-label">keep this sky</span>
+      </button>
+    </div>
+
+    <form class="composer" id="composer" autocomplete="off">
+      <label class="sr-only" for="phrase">Give the flock a sentence</label>
+      <span class="prompt" aria-hidden="true">⌁</span>
+      <input
+        id="phrase"
+        name="phrase"
+        type="text"
+        maxlength="120"
+        spellcheck="true"
+        placeholder="give the flock a sentence…"
+      />
+      <button type="submit">release <span aria-hidden="true">↵</span></button>
+      <p class="composer-note">
+        <span><kbd>move</kbd> make wind</span>
+        <span><kbd>space</kbd> scatter</span>
+        <span><kbd>r</kbd> reform</span>
+        <span><kbd>a</kbd> sound</span>
+      </p>
+    </form>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <p class="sr-only" id="sentence-status" aria-live="polite"></p>
+
+    <noscript>
+      <p class="noscript">Night Letters needs JavaScript to find its wings.</p>
+    </noscript>
+
+    <script src="app.js"></script>
+  </body>
+</html>
