@@ -139,6 +139,7 @@
       if (this.kind === "letters") this.makeLetters();
       if (this.kind === "murmuration") this.makeMurmuration();
       if (this.kind === "photophore") this.makePhotophore();
+      if (this.kind === "seasons") this.makeSeasons();
       this.draw(3.4);
     }
 
@@ -246,6 +247,172 @@
       if (this.kind === "letters") this.drawLetters(time);
       if (this.kind === "murmuration") this.drawMurmuration(time);
       if (this.kind === "photophore") this.drawPhotophore(time);
+      if (this.kind === "seasons") this.drawSeasons(time);
+    }
+
+    makeSeasons() {
+      const count = clamp(
+        Math.round((this.width * this.height) / 700),
+        380,
+        900,
+      );
+      this.points = Array.from({ length: count }, (_, index) => {
+        const roll = randomAt(index, 50);
+        let zone = "sky";
+        let x = randomAt(index, 51);
+        let y = randomAt(index, 52);
+        if (roll < 0.52) {
+          zone = "canopy";
+          const angle = randomAt(index, 53) * TAU;
+          const radius = Math.sqrt(randomAt(index, 54));
+          x = 0.52 + Math.cos(angle) * radius * 0.17;
+          y = 0.36 + Math.sin(angle) * radius * 0.12;
+        } else if (roll < 0.8) {
+          zone = "ground";
+          y = 0.64 + y * 0.36;
+        } else {
+          y = y * 0.64;
+        }
+        return {
+          zone,
+          x,
+          y,
+          size: 2 + randomAt(index, 55) * 3.2,
+          phase: randomAt(index, 56) * TAU,
+          tone: randomAt(index, 57),
+        };
+      });
+    }
+
+    drawSeasons(time) {
+      const context = this.context;
+      // palettes: winter, spring, summer, autumn — rgb triplets per zone
+      const SKY = [
+        [178, 186, 196],
+        [166, 204, 222],
+        [150, 195, 226],
+        [206, 178, 142],
+      ];
+      const GROUND = [
+        [222, 226, 232],
+        [98, 164, 82],
+        [158, 158, 62],
+        [196, 138, 62],
+      ];
+      const CANOPY = [
+        [72, 76, 88],
+        [112, 178, 92],
+        [58, 122, 64],
+        [198, 104, 46],
+      ];
+      const DENSITY = [0.3, 0.95, 1, 0.9];
+      const cycle = (time * 0.16) % 4;
+      const k = Math.floor(cycle) % 4;
+      const next = (k + 1) % 4;
+      const blend = smoothstep(cycle - Math.floor(cycle));
+      const mixChannel = (a, b, channel) =>
+        Math.round(lerp(a[channel], b[channel], blend));
+      const zoneColor = (palette) => [
+        mixChannel(palette[k], palette[next], 0),
+        mixChannel(palette[k], palette[next], 1),
+        mixChannel(palette[k], palette[next], 2),
+      ];
+      const sky = zoneColor(SKY);
+      const ground = zoneColor(GROUND);
+      const canopy = zoneColor(CANOPY);
+      const density = lerp(DENSITY[k], DENSITY[next], blend);
+
+      const wash = context.createLinearGradient(0, 0, 0, this.height);
+      wash.addColorStop(
+        0,
+        "rgb(" + sky[0] * 0.62 + "," + sky[1] * 0.64 + "," + sky[2] * 0.68 + ")",
+      );
+      wash.addColorStop(
+        0.62,
+        "rgb(" + sky[0] * 0.44 + "," + sky[1] * 0.46 + "," + sky[2] * 0.5 + ")",
+      );
+      wash.addColorStop(
+        0.64,
+        "rgb(" +
+          ground[0] * 0.42 +
+          "," +
+          ground[1] * 0.46 +
+          "," +
+          ground[2] * 0.36 +
+          ")",
+      );
+      wash.addColorStop(
+        1,
+        "rgb(" +
+          ground[0] * 0.22 +
+          "," +
+          ground[1] * 0.24 +
+          "," +
+          ground[2] * 0.18 +
+          ")",
+      );
+      context.fillStyle = wash;
+      context.fillRect(0, 0, this.width, this.height);
+
+      // trunk — a few dark strokes, steady through every climate
+      context.strokeStyle = "rgba(38, 30, 24, 0.9)";
+      context.lineCap = "round";
+      const baseX = 0.52 * this.width;
+      const baseY = 0.68 * this.height;
+      const crownY = 0.42 * this.height;
+      context.lineWidth = Math.max(2.5, this.width * 0.011);
+      context.beginPath();
+      context.moveTo(baseX, baseY);
+      context.quadraticCurveTo(
+        baseX - this.width * 0.012,
+        (baseY + crownY) / 2,
+        baseX,
+        crownY,
+      );
+      context.moveTo(baseX, crownY + this.height * 0.05);
+      context.lineTo(baseX - this.width * 0.07, crownY - this.height * 0.03);
+      context.moveTo(baseX, crownY + this.height * 0.04);
+      context.lineTo(baseX + this.width * 0.08, crownY - this.height * 0.04);
+      context.stroke();
+      context.lineWidth = Math.max(1.5, this.width * 0.006);
+      context.beginPath();
+      context.moveTo(baseX, crownY + this.height * 0.09);
+      context.lineTo(baseX - this.width * 0.045, crownY - this.height * 0.075);
+      context.moveTo(baseX, crownY + this.height * 0.02);
+      context.lineTo(baseX + this.width * 0.035, crownY - this.height * 0.085);
+      context.moveTo(baseX - this.width * 0.04, crownY + this.height * 0.006);
+      context.lineTo(baseX - this.width * 0.085, crownY - this.height * 0.055);
+      context.stroke();
+
+      for (const point of this.points) {
+        const boil = Math.sin(time * 0.9 + point.phase) * 0.0035;
+        const x = (point.x + boil) * this.width;
+        const y =
+          (point.y + Math.cos(time * 0.7 + point.phase * 1.6) * 0.0028) *
+          this.height;
+        let color = sky;
+        let alpha = 0.22 + point.tone * 0.26;
+        if (point.zone === "ground") {
+          color = ground;
+          alpha = 0.32 + point.tone * 0.4;
+        } else if (point.zone === "canopy") {
+          if (point.tone > density) continue;
+          color = canopy;
+          alpha = 0.5 + point.tone * 0.42;
+        }
+        const shade = 0.82 + point.tone * 0.36;
+        context.fillStyle =
+          "rgba(" +
+          Math.round(color[0] * shade) +
+          "," +
+          Math.round(color[1] * shade) +
+          "," +
+          Math.round(color[2] * shade) +
+          "," +
+          alpha +
+          ")";
+        context.fillRect(x, y, point.size, point.size);
+      }
     }
 
     makePhotophore() {

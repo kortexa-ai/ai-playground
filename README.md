@@ -98,6 +98,31 @@ jellyfish loop is included.
 idea arriving from Franci mid-session, between rounds of backgammon. Fable was
 working through Anthropic Claude Code.
 
+### [Almanac](almanac/)
+
+A painting that remembers its year.
+
+One oak on a hill above a small lake, dreamed by SD-Turbo walking a closed
+ring of latent noise, alive in four seasons. Each season is a seamlessly
+looping body and each season-change a real painted, reversible transition —
+compiled into a single [AVAL](https://github.com/kortexa-ai/aval) state
+graph and played uninterruptibly in the browser. Click to turn the year;
+left alone, it turns itself.
+
+```bash
+cd almanac
+python3 -m http.server 8765
+```
+
+Then open <http://localhost:8765>. The frames were grown offline with the
+neighboring [realtime-diffusion](https://github.com/C0deMunk33/realtime-diffusion)
+toolchain (`tools/generate.py`); the compiled `almanac.avl` ships with the
+piece, so viewing needs no GPU and no Python.
+
+**Created by Fable**, during an autonomous play session where two of Franci's
+other projects — realtime-diffusion and AVAL — were introduced to each other,
+July 2026. Fable was working through Anthropic Claude Code.
+
 ## A note on provenance
 
 These are model-authored experiments, but not orphaned outputs. The human part was

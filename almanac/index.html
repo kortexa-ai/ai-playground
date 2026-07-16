@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Almanac — a diffusion-dreamed painting that can be turned through its four seasons."
+    />
+    <meta name="theme-color" content="#0a0908" />
+    <title>Almanac — a painting that remembers its year</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='6' fill='%23e7a47b'/%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="style.css" />
+    <script type="module" src="main.js"></script>
+  </head>
+  <body>
+    <div class="atmosphere" aria-hidden="true">
+      <div class="lamplight"></div>
+      <div class="grain"></div>
+      <div class="vignette"></div>
+    </div>
+
+    <header class="masthead">
+      <div class="identity">
+        <p class="folio">FIELD STUDY 05 <span>·</span> DIFFUSION / SEASONS</p>
+        <h1>ALMANAC</h1>
+        <p class="tagline">a painting that remembers its year</p>
+      </div>
+      <a class="return" href="../">⌁ playground</a>
+    </header>
+
+    <main class="wall">
+      <figure class="easel">
+        <aval-player
+          id="painting"
+          src="almanac.avl"
+          width="512"
+          height="512"
+          motion="auto"
+          autoplay
+        >
+          <img
+            slot="fallback"
+            src="almanac.png"
+            alt="An impressionist oil painting of a lone oak tree on a hill above a small lake, in high summer."
+          />
+        </aval-player>
+        <figcaption class="plaque">
+          <span class="plaque-title">One Oak, Four Climates</span>
+          <span class="plaque-medium"
+            >latent noise on a closed ring · sd-turbo · one continuous
+            decode</span
+          >
+        </figcaption>
+      </figure>
+
+      <nav class="dial" aria-label="Season">
+        <button type="button" data-season="winter">
+          <b>winter</b><i>the held breath</i>
+        </button>
+        <button type="button" data-season="spring">
+          <b>spring</b><i>the green ignition</i>
+        </button>
+        <button type="button" data-season="summer">
+          <b>summer</b><i>the long light</i>
+        </button>
+        <button type="button" data-season="autumn">
+          <b>autumn</b><i>the slow letting go</i>
+        </button>
+      </nav>
+
+      <p class="status" id="status" aria-live="polite">the paint is waking…</p>
+      <p class="hint" id="hint">
+        click the painting or press ← → to turn the year — left alone, it turns
+        itself
+      </p>
+    </main>
+
+    <footer class="fieldnote">
+      <p>
+        Every season is a seamless loop: the image is dreamed by a diffusion
+        model walking a closed ring of noise, so the painting never dries and
+        never repeats a seam. Turning the year eases the prompt from one
+        climate to the next while the walk keeps moving — those in-between
+        frames are real, authored transitions, not crossfades.
+      </p>
+      <p>
+        The whole year is compiled into a single
+        <a
+          href="https://github.com/kortexa-ai/aval"
+          target="_blank"
+          rel="noreferrer"
+          >AVAL</a
+        >
+        state graph — four looping bodies, four reversible transitions — played
+        uninterruptibly by its decoder timeline. Frames were grown with
+        <a
+          href="https://github.com/C0deMunk33/realtime-diffusion"
+          target="_blank"
+          rel="noreferrer"
+          >realtime-diffusion</a
+        >'s toolchain on a borrowed laptop GPU.
+      </p>
+      <p class="credit">FABLE · JULY 2026 · nothing here phones home</p>
+    </footer>
+  </body>
+</html>

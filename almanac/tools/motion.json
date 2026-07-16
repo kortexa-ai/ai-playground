@@ -1,0 +1,280 @@
+{
+  "projectVersion": "0.3",
+  "profile": "avc-annexb-opaque-v1",
+  "canvas": {
+    "width": 512,
+    "height": 512,
+    "fit": "contain",
+    "pixelAspect": [1, 1],
+    "colorSpace": "srgb"
+  },
+  "frameRate": { "numerator": 20, "denominator": 1 },
+  "sources": [
+    {
+      "id": "year",
+      "type": "png-sequence",
+      "directory": "frames",
+      "prefix": "frame-",
+      "digits": 4,
+      "suffix": ".png",
+      "firstNumber": 0,
+      "frameCount": 796
+    }
+  ],
+  "renditions": [
+    {
+      "id": "avc.1x",
+      "width": 512,
+      "height": 512,
+      "encoding": {
+        "codec": "h264",
+        "preset": "veryslow",
+        "rateControl": {
+          "mode": "crf",
+          "crf": 21,
+          "maxBitrate": 8000000
+        }
+      }
+    }
+  ],
+  "units": [
+    {
+      "id": "winter.body",
+      "kind": "body",
+      "source": "year",
+      "range": [0, 100],
+      "playback": "loop",
+      "ports": [{ "id": "default", "entryFrame": 0, "portalFrames": [0] }]
+    },
+    {
+      "id": "winter-spring",
+      "kind": "reversible",
+      "source": "year",
+      "range": [100, 199],
+      "residency": {
+        "endpoints": [
+          { "state": "winter", "port": "default", "frames": 6 },
+          { "state": "spring", "port": "default", "frames": 6 }
+        ]
+      }
+    },
+    {
+      "id": "spring.body",
+      "kind": "body",
+      "source": "year",
+      "range": [199, 299],
+      "playback": "loop",
+      "ports": [{ "id": "default", "entryFrame": 0, "portalFrames": [0] }]
+    },
+    {
+      "id": "spring-summer",
+      "kind": "reversible",
+      "source": "year",
+      "range": [299, 398],
+      "residency": {
+        "endpoints": [
+          { "state": "spring", "port": "default", "frames": 6 },
+          { "state": "summer", "port": "default", "frames": 6 }
+        ]
+      }
+    },
+    {
+      "id": "summer.body",
+      "kind": "body",
+      "source": "year",
+      "range": [398, 498],
+      "playback": "loop",
+      "ports": [{ "id": "default", "entryFrame": 0, "portalFrames": [0] }]
+    },
+    {
+      "id": "summer-autumn",
+      "kind": "reversible",
+      "source": "year",
+      "range": [498, 597],
+      "residency": {
+        "endpoints": [
+          { "state": "summer", "port": "default", "frames": 6 },
+          { "state": "autumn", "port": "default", "frames": 6 }
+        ]
+      }
+    },
+    {
+      "id": "autumn.body",
+      "kind": "body",
+      "source": "year",
+      "range": [597, 697],
+      "playback": "loop",
+      "ports": [{ "id": "default", "entryFrame": 0, "portalFrames": [0] }]
+    },
+    {
+      "id": "autumn-winter",
+      "kind": "reversible",
+      "source": "year",
+      "range": [697, 796],
+      "residency": {
+        "endpoints": [
+          { "state": "autumn", "port": "default", "frames": 6 },
+          { "state": "winter", "port": "default", "frames": 6 }
+        ]
+      }
+    }
+  ],
+  "initialState": "summer",
+  "states": [
+    { "id": "winter", "bodyUnit": "winter.body" },
+    { "id": "spring", "bodyUnit": "spring.body" },
+    { "id": "summer", "bodyUnit": "summer.body" },
+    { "id": "autumn", "bodyUnit": "autumn.body" }
+  ],
+  "edges": [
+    {
+      "id": "winter.spring",
+      "from": "winter",
+      "to": "spring",
+      "trigger": { "type": "event", "name": "go.spring" },
+      "start": {
+        "type": "portal",
+        "sourcePort": "default",
+        "targetPort": "default",
+        "maxWaitFrames": 120
+      },
+      "transition": {
+        "kind": "reversible",
+        "unit": "winter-spring",
+        "direction": "forward"
+      },
+      "continuity": "exact-authored"
+    },
+    {
+      "id": "spring.winter",
+      "from": "spring",
+      "to": "winter",
+      "trigger": { "type": "event", "name": "back.winter" },
+      "start": {
+        "type": "portal",
+        "sourcePort": "default",
+        "targetPort": "default",
+        "maxWaitFrames": 120
+      },
+      "transition": {
+        "kind": "reversible",
+        "unit": "winter-spring",
+        "direction": "reverse",
+        "reverseOf": "winter.spring"
+      },
+      "continuity": "exact-reverse"
+    },
+    {
+      "id": "spring.summer",
+      "from": "spring",
+      "to": "summer",
+      "trigger": { "type": "event", "name": "go.summer" },
+      "start": {
+        "type": "portal",
+        "sourcePort": "default",
+        "targetPort": "default",
+        "maxWaitFrames": 120
+      },
+      "transition": {
+        "kind": "reversible",
+        "unit": "spring-summer",
+        "direction": "forward"
+      },
+      "continuity": "exact-authored"
+    },
+    {
+      "id": "summer.spring",
+      "from": "summer",
+      "to": "spring",
+      "trigger": { "type": "event", "name": "back.spring" },
+      "start": {
+        "type": "portal",
+        "sourcePort": "default",
+        "targetPort": "default",
+        "maxWaitFrames": 120
+      },
+      "transition": {
+        "kind": "reversible",
+        "unit": "spring-summer",
+        "direction": "reverse",
+        "reverseOf": "spring.summer"
+      },
+      "continuity": "exact-reverse"
+    },
+    {
+      "id": "summer.autumn",
+      "from": "summer",
+      "to": "autumn",
+      "trigger": { "type": "event", "name": "go.autumn" },
+      "start": {
+        "type": "portal",
+        "sourcePort": "default",
+        "targetPort": "default",
+        "maxWaitFrames": 120
+      },
+      "transition": {
+        "kind": "reversible",
+        "unit": "summer-autumn",
+        "direction": "forward"
+      },
+      "continuity": "exact-authored"
+    },
+    {
+      "id": "autumn.summer",
+      "from": "autumn",
+      "to": "summer",
+      "trigger": { "type": "event", "name": "back.summer" },
+      "start": {
+        "type": "portal",
+        "sourcePort": "default",
+        "targetPort": "default",
+        "maxWaitFrames": 120
+      },
+      "transition": {
+        "kind": "reversible",
+        "unit": "summer-autumn",
+        "direction": "reverse",
+        "reverseOf": "summer.autumn"
+      },
+      "continuity": "exact-reverse"
+    },
+    {
+      "id": "autumn.winter",
+      "from": "autumn",
+      "to": "winter",
+      "trigger": { "type": "event", "name": "go.winter" },
+      "start": {
+        "type": "portal",
+        "sourcePort": "default",
+        "targetPort": "default",
+        "maxWaitFrames": 120
+      },
+      "transition": {
+        "kind": "reversible",
+        "unit": "autumn-winter",
+        "direction": "forward"
+      },
+      "continuity": "exact-authored"
+    },
+    {
+      "id": "winter.autumn",
+      "from": "winter",
+      "to": "autumn",
+      "trigger": { "type": "event", "name": "back.autumn" },
+      "start": {
+        "type": "portal",
+        "sourcePort": "default",
+        "targetPort": "default",
+        "maxWaitFrames": 120
+      },
+      "transition": {
+        "kind": "reversible",
+        "unit": "autumn-winter",
+        "direction": "reverse",
+        "reverseOf": "autumn.winter"
+      },
+      "continuity": "exact-reverse"
+    }
+  ],
+  "bindings": []
+}
