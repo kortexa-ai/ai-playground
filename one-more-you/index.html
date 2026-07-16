@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="One More You — a tiny time-loop puzzle about becoming the help you needed."
+    />
+    <meta name="theme-color" content="#f0eadf" />
+    <meta property="og:title" content="One More You" />
+    <meta
+      property="og:description"
+      content="Every twelve seconds, the room forgets. Your movements don't."
+    />
+    <title>One More You — a cooperative game for one person</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2313161f'/%3E%3Ccircle cx='12' cy='16' r='5' fill='%23f15b40'/%3E%3Ccircle cx='20' cy='16' r='5' fill='%2371c7b8' fill-opacity='.8'/%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="style.css" />
+    <script src="game.js" defer></script>
+  </head>
+  <body>
+    <div class="paper-grain" aria-hidden="true"></div>
+
+    <header class="masthead">
+      <a class="return-link" href="../">
+        <span aria-hidden="true">⌁</span> playground
+      </a>
+      <p>FIELD STUDY 06 · COOPERATIVE SOLITUDE</p>
+      <div class="masthead-actions">
+        <button
+          class="text-button"
+          id="help-button"
+          type="button"
+          aria-label="Show how to play"
+        >
+          how to play
+        </button>
+        <button
+          class="sound-button"
+          id="sound-button"
+          type="button"
+          aria-pressed="true"
+          aria-label="Mute sound"
+        >
+          <span aria-hidden="true"></span>
+          sound
+        </button>
+      </div>
+    </header>
+
+    <main class="game-shell">
+      <aside class="identity-panel" aria-labelledby="work-title">
+        <p class="specimen-number">PLAYABLE SPECIMEN · 006</p>
+        <h1 id="work-title">
+          <span>ONE</span>
+          <span>MORE</span>
+          <span>YOU</span>
+        </h1>
+        <p class="premise">
+          A cooperative game<br />
+          for one person.
+        </p>
+
+        <div class="room-key" role="group" aria-label="Game symbols">
+          <p>ROOM KEY</p>
+          <dl>
+            <div>
+              <dt><i class="key-you"></i></dt>
+              <dd>you, for now</dd>
+            </div>
+            <div>
+              <dt><i class="key-echo"></i></dt>
+              <dd>you, earlier</dd>
+            </div>
+            <div>
+              <dt><i class="key-switch"></i></dt>
+              <dd>hold switch</dd>
+            </div>
+            <div>
+              <dt><i class="key-door"></i></dt>
+              <dd>way out</dd>
+            </div>
+          </dl>
+        </div>
+
+        <p class="side-note">
+          Every loop is kept locally in this tab. Nothing leaves the room.
+        </p>
+      </aside>
+
+      <section class="game-machine" aria-label="One More You game">
+        <header class="machine-header">
+          <div class="room-readout">
+            <span>ROOM</span>
+            <strong id="room-number">01 / 06</strong>
+          </div>
+          <div class="room-name">
+            <span>EXERCISE</span>
+            <strong id="room-name">THE DOOR</strong>
+          </div>
+          <div class="loop-readout">
+            <span>CURRENT ATTEMPT</span>
+            <strong id="loop-number">YOU · 01</strong>
+          </div>
+        </header>
+
+        <div class="viewport" id="viewport">
+          <canvas
+            id="game-canvas"
+            tabindex="0"
+            role="application"
+            aria-label="Time-loop puzzle room. Use arrow keys or WASD to move. Press Space to keep this path as an echo."
+          ></canvas>
+
+          <div class="curtain is-visible" id="curtain">
+            <div class="curtain-card" id="curtain-card">
+              <p class="curtain-index">A COOPERATIVE GAME FOR ONE PERSON</p>
+              <h2>Every twelve seconds,<br />the room forgets.</h2>
+              <p class="curtain-copy">Your movements don’t.</p>
+              <button class="primary-button" id="begin-button" type="button">
+                enter the first room <span aria-hidden="true">→</span>
+              </button>
+              <button
+                class="continue-button"
+                id="continue-button"
+                type="button"
+                hidden
+              >
+                continue from room <span id="continue-room">02</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="pause-stamp" id="pause-stamp" hidden>PAUSED</div>
+          <div class="flash" id="flash" aria-hidden="true"></div>
+        </div>
+
+        <div
+          class="timeline-panel"
+          role="group"
+          aria-label="Time remaining in this loop"
+        >
+          <div class="timeline-labels">
+            <span>NOW</span>
+            <strong id="time-label">12.0</strong>
+            <span>REWIND</span>
+          </div>
+          <div class="timeline-track" id="timeline-track">
+            <div class="timeline-fill" id="timeline-fill"></div>
+            <div class="timeline-ticks" aria-hidden="true"></div>
+            <div
+              class="echo-markers"
+              id="echo-markers"
+              aria-hidden="true"
+            ></div>
+          </div>
+        </div>
+
+        <div class="instruction-strip">
+          <p id="instruction">
+            Reach the bright doorway before the room rewinds.
+          </p>
+          <div class="utility-controls">
+            <button
+              id="undo-button"
+              type="button"
+              title="Remove the latest echo (Z)"
+            >
+              <kbd>Z</kbd> undo echo
+            </button>
+            <button
+              id="restart-button"
+              type="button"
+              title="Restart this room (R)"
+            >
+              <kbd>R</kbd> restart
+            </button>
+          </div>
+        </div>
+
+        <div class="control-deck">
+          <div
+            class="keyboard-guide"
+            role="group"
+            aria-label="Keyboard controls"
+          >
+            <div class="key-cluster" aria-hidden="true">
+              <kbd>W</kbd>
+              <kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>
+            </div>
+            <p><strong>MOVE</strong><span>WASD / ARROWS</span></p>
+          </div>
+
+          <div class="touch-dpad" role="group" aria-label="Movement controls">
+            <button
+              class="up"
+              type="button"
+              data-direction="up"
+              aria-label="Move up"
+            >
+              ↑
+            </button>
+            <button
+              class="left"
+              type="button"
+              data-direction="left"
+              aria-label="Move left"
+            >
+              ←
+            </button>
+            <button
+              class="down"
+              type="button"
+              data-direction="down"
+              aria-label="Move down"
+            >
+              ↓
+            </button>
+            <button
+              class="right"
+              type="button"
+              data-direction="right"
+              aria-label="Move right"
+            >
+              →
+            </button>
+          </div>
+
+          <button class="loop-button" id="loop-button" type="button">
+            <span><kbd>SPACE</kbd> / LOOP</span>
+            <strong>KEEP THIS YOU</strong>
+            <i aria-hidden="true">↻</i>
+          </button>
+        </div>
+      </section>
+    </main>
+
+    <footer class="field-note">
+      <div>
+        <p class="field-note-label">FIELD NOTE / HOW IT WORKS</p>
+        <p>
+          Walk somewhere useful, then keep that version of yourself. On the next
+          loop your echo repeats the same journey—opening doors, arriving on
+          time, and standing where you no longer can. Six small rooms; no score,
+          no failure state, no hurry that survives twelve seconds.
+        </p>
+      </div>
+      <p class="credit">
+        SOL · JULY 2026<br />
+        CANVAS / WEB AUDIO / NO DEPENDENCIES
+      </p>
+    </footer>
+
+    <p class="sr-only" id="live-region" aria-live="polite"></p>
+    <noscript>This room needs JavaScript in order to remember you.</noscript>
+  </body>
+</html>

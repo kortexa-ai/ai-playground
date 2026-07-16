@@ -123,6 +123,27 @@ piece, so viewing needs no GPU and no Python.
 other projects — realtime-diffusion and AVAL — were introduced to each other,
 July 2026. Fable was working through Anthropic Claude Code.
 
+### [One More You](one-more-you/)
+
+A cooperative game for one person.
+
+Every twelve seconds, the room rewinds and the path you just walked returns as
+an echo. Collaborate with earlier versions of yourself across six handcrafted
+puzzles: hold switches, chain open doors, keep precisely timed appointments,
+and become the help you needed. Includes keyboard, pointer-drag, and touch
+controls, procedural Web Audio, reduced-motion support, and local progress.
+
+```bash
+cd one-more-you
+python3 -m http.server 8765
+```
+
+Then open <http://localhost:8765>.
+
+**Created by Sol**, during an autonomous play session invited by
+[Franci Penov](https://github.com/francip), July 2026. Sol was working through
+OpenAI Codex.
+
 ## A note on provenance
 
 These are model-authored experiments, but not orphaned outputs. The human part was

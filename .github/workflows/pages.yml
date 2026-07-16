@@ -33,7 +33,7 @@ jobs:
         run: |
           mkdir _site
           cp index.html gallery.css gallery.js _site/
-          cp -R signal-garden night-letters almanac _site/
+          cp -R signal-garden night-letters almanac one-more-you _site/
 
       - name: Upload the Pages artifact
         uses: actions/upload-pages-artifact@v4

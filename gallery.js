@@ -140,6 +140,7 @@
       if (this.kind === "murmuration") this.makeMurmuration();
       if (this.kind === "photophore") this.makePhotophore();
       if (this.kind === "seasons") this.makeSeasons();
+      if (this.kind === "echoes") this.makeEchoes();
       this.draw(3.4);
     }
 
@@ -241,6 +242,37 @@
       }));
     }
 
+    makeEchoes() {
+      this.echoRoutes = [
+        [
+          { x: 0.2, y: 0.76 },
+          { x: 0.2, y: 0.3 },
+        ],
+        [
+          { x: 0.2, y: 0.76 },
+          { x: 0.4, y: 0.68 },
+          { x: 0.43, y: 0.46 },
+        ],
+        [
+          { x: 0.2, y: 0.76 },
+          { x: 0.49, y: 0.76 },
+          { x: 0.49, y: 0.5 },
+          { x: 0.73, y: 0.5 },
+          { x: 0.82, y: 0.25 },
+        ],
+      ];
+      const count = clamp(
+        Math.round((this.width * this.height) / 4300),
+        45,
+        120,
+      );
+      this.points = Array.from({ length: count }, (_, index) => ({
+        x: randomAt(index, 61),
+        y: randomAt(index, 62),
+        alpha: 0.015 + randomAt(index, 63) * 0.035,
+      }));
+    }
+
     draw(time) {
       this.context.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
       if (this.kind === "signals") this.drawSignals(time);
@@ -248,6 +280,7 @@
       if (this.kind === "murmuration") this.drawMurmuration(time);
       if (this.kind === "photophore") this.drawPhotophore(time);
       if (this.kind === "seasons") this.drawSeasons(time);
+      if (this.kind === "echoes") this.drawEchoes(time);
     }
 
     makeSeasons() {
@@ -325,7 +358,13 @@
       const wash = context.createLinearGradient(0, 0, 0, this.height);
       wash.addColorStop(
         0,
-        "rgb(" + sky[0] * 0.62 + "," + sky[1] * 0.64 + "," + sky[2] * 0.68 + ")",
+        "rgb(" +
+          sky[0] * 0.62 +
+          "," +
+          sky[1] * 0.64 +
+          "," +
+          sky[2] * 0.68 +
+          ")",
       );
       wash.addColorStop(
         0.62,
@@ -515,6 +554,217 @@
         );
       }
       context.globalCompositeOperation = "source-over";
+    }
+
+    drawEchoes(time) {
+      const context = this.context;
+      const width = this.width;
+      const height = this.height;
+      const roomX = width * 0.08;
+      const roomY = height * 0.09;
+      const roomWidth = width * 0.84;
+      const roomHeight = height * 0.82;
+      const shortest = Math.min(width, height);
+      const cycle = (time % 8) / 8;
+      const fade = cycle > 0.9 ? 1 - smoothstep((cycle - 0.9) / 0.1) : 1;
+
+      const background = context.createRadialGradient(
+        width * 0.5,
+        height * 0.45,
+        0,
+        width * 0.5,
+        height * 0.5,
+        Math.max(width, height) * 0.7,
+      );
+      background.addColorStop(0, "#242a38");
+      background.addColorStop(1, "#0e1119");
+      context.fillStyle = background;
+      context.fillRect(0, 0, width, height);
+
+      context.fillStyle = "rgba(0, 0, 0, 0.3)";
+      context.fillRect(
+        roomX + shortest * 0.025,
+        roomY + shortest * 0.03,
+        roomWidth,
+        roomHeight,
+      );
+      context.fillStyle = "#e7dfd2";
+      context.fillRect(roomX, roomY, roomWidth, roomHeight);
+
+      context.strokeStyle = "rgba(20, 23, 31, 0.1)";
+      context.lineWidth = 0.7;
+      for (let column = 1; column < 12; column++) {
+        const x = roomX + (column / 12) * roomWidth;
+        context.beginPath();
+        context.moveTo(x, roomY);
+        context.lineTo(x, roomY + roomHeight);
+        context.stroke();
+      }
+      for (let row = 1; row < 9; row++) {
+        const y = roomY + (row / 9) * roomHeight;
+        context.beginPath();
+        context.moveTo(roomX, y);
+        context.lineTo(roomX + roomWidth, y);
+        context.stroke();
+      }
+
+      const wall = Math.max(8, shortest * 0.047);
+      context.fillStyle = "#252b39";
+      context.fillRect(roomX, roomY, roomWidth, wall);
+      context.fillRect(roomX, roomY + roomHeight - wall, roomWidth, wall);
+      context.fillRect(roomX, roomY, wall, roomHeight);
+      context.fillRect(roomX + roomWidth - wall, roomY, wall, roomHeight);
+      const dividerX = roomX + roomWidth * 0.58;
+      context.fillRect(dividerX - wall * 0.5, roomY, wall, roomHeight * 0.43);
+      context.fillRect(
+        dividerX - wall * 0.5,
+        roomY + roomHeight * 0.57,
+        wall,
+        roomHeight * 0.43,
+      );
+
+      const routePoint = (route, progress) => {
+        const lengths = [];
+        let total = 0;
+        for (let index = 1; index < route.length; index++) {
+          const dx = route[index].x - route[index - 1].x;
+          const dy = route[index].y - route[index - 1].y;
+          const length = Math.hypot(dx, dy);
+          lengths.push(length);
+          total += length;
+        }
+        let remaining = clamp(progress, 0, 1) * total;
+        for (let index = 0; index < lengths.length; index++) {
+          if (remaining <= lengths[index]) {
+            const amount = lengths[index] ? remaining / lengths[index] : 0;
+            return {
+              x: lerp(route[index].x, route[index + 1].x, amount),
+              y: lerp(route[index].y, route[index + 1].y, amount),
+            };
+          }
+          remaining -= lengths[index];
+        }
+        return route[route.length - 1];
+      };
+
+      const toScreen = (point) => ({
+        x: roomX + point.x * roomWidth,
+        y: roomY + point.y * roomHeight,
+      });
+
+      const colors = ["#f15b40", "#71c7b8", "#fffaf1"];
+      this.echoRoutes.forEach((route, routeIndex) => {
+        context.save();
+        context.beginPath();
+        route.forEach((point, pointIndex) => {
+          const screen = toScreen(point);
+          if (pointIndex === 0) context.moveTo(screen.x, screen.y);
+          else context.lineTo(screen.x, screen.y);
+        });
+        context.setLineDash([
+          Math.max(2, shortest * 0.012),
+          Math.max(3, shortest * 0.02),
+        ]);
+        context.strokeStyle = colors[routeIndex];
+        context.globalAlpha = routeIndex === 2 ? 0.2 : 0.27;
+        context.lineWidth = Math.max(1, shortest * 0.004);
+        context.stroke();
+        context.restore();
+      });
+
+      const drawSwitch = (point, color, active) => {
+        const screen = toScreen(point);
+        const size = shortest * 0.028;
+        context.save();
+        context.translate(screen.x, screen.y);
+        context.rotate(Math.PI / 4);
+        context.fillStyle = active ? color : "rgba(20, 23, 31, 0.1)";
+        context.strokeStyle = color;
+        context.lineWidth = Math.max(1, shortest * 0.005);
+        context.fillRect(-size, -size, size * 2, size * 2);
+        context.strokeRect(-size, -size, size * 2, size * 2);
+        context.restore();
+      };
+      const firstDone = cycle > 0.2;
+      const secondDone = cycle > 0.36;
+      drawSwitch(this.echoRoutes[0].at(-1), colors[0], firstDone);
+      drawSwitch(this.echoRoutes[1].at(-1), colors[1], secondDone);
+
+      const doorOpen = firstDone && secondDone;
+      const gapTop = roomY + roomHeight * 0.43;
+      const gapHeight = roomHeight * 0.14;
+      context.fillStyle = "#496fdf";
+      const slab = doorOpen ? gapHeight * 0.08 : gapHeight * 0.5;
+      context.fillRect(dividerX - wall * 0.45, gapTop, wall * 0.9, slab);
+      context.fillRect(
+        dividerX - wall * 0.45,
+        gapTop + gapHeight - slab,
+        wall * 0.9,
+        slab,
+      );
+
+      const exit = toScreen({ x: 0.82, y: 0.25 });
+      context.save();
+      context.shadowColor = "#71c7b8";
+      context.shadowBlur = shortest * 0.05;
+      context.strokeStyle = "#71c7b8";
+      context.lineWidth = Math.max(2, shortest * 0.012);
+      context.strokeRect(
+        exit.x - shortest * 0.028,
+        exit.y - shortest * 0.04,
+        shortest * 0.056,
+        shortest * 0.08,
+      );
+      context.restore();
+
+      const progresses = [
+        clamp(cycle / 0.2, 0, 1),
+        clamp((cycle - 0.04) / 0.32, 0, 1),
+        clamp((cycle - 0.26) / 0.56, 0, 1),
+      ];
+      const drawActor = (point, color, alpha, routeIndex) => {
+        const screen = toScreen(point);
+        const radius = clamp(shortest * 0.021, 5, 12);
+        context.save();
+        context.globalAlpha = alpha * fade;
+        context.fillStyle = "rgba(20, 23, 31, 0.22)";
+        context.beginPath();
+        context.ellipse(
+          screen.x,
+          screen.y + radius * 0.75,
+          radius * 1.1,
+          radius * 0.45,
+          0,
+          0,
+          TAU,
+        );
+        context.fill();
+        context.fillStyle = color;
+        context.strokeStyle = routeIndex === 2 ? "#13161f" : "#fffaf1";
+        context.lineWidth = Math.max(1, radius * 0.16);
+        context.beginPath();
+        context.arc(screen.x, screen.y, radius, 0, TAU);
+        context.fill();
+        context.stroke();
+        context.fillStyle = "#13161f";
+        context.beginPath();
+        context.arc(screen.x, screen.y, radius * 0.25, 0, TAU);
+        context.fill();
+        context.restore();
+      };
+      this.echoRoutes.forEach((route, index) => {
+        drawActor(
+          routePoint(route, progresses[index]),
+          colors[index],
+          index === 2 ? 1 : 0.78,
+          index,
+        );
+      });
+
+      for (const point of this.points) {
+        context.fillStyle = `rgba(255, 250, 241, ${point.alpha})`;
+        context.fillRect(point.x * width, point.y * height, 1, 1);
+      }
     }
 
     drawSignals(time) {

@@ -280,6 +280,10 @@ button {
   background: #0a0a10;
 }
 
+.echo-card .work-visual {
+  background: #171b25;
+}
+
 .work-visual::before,
 .desktop-visual::before {
   content: "";
