@@ -1,7 +1,2 @@
-node_modules/
-build/
-dist/
-artifacts/
-*.tsbuildinfo
-.DS_Store
-Thumbs.db
+__pycache__/
+*.pyc
