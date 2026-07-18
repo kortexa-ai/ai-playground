@@ -141,6 +141,7 @@
       if (this.kind === "photophore") this.makePhotophore();
       if (this.kind === "seasons") this.makeSeasons();
       if (this.kind === "echoes") this.makeEchoes();
+      if (this.kind === "longitude") this.makeLongitude();
       this.draw(3.4);
     }
 
@@ -273,6 +274,20 @@
       }));
     }
 
+    makeLongitude() {
+      this.longitudeRows = clamp(Math.round(this.height / 13), 24, 46);
+      this.longitudeKnots = Array.from({ length: 11 }, (_, index) => ({
+        row: 4 + Math.floor(randomAt(index, 72) * (this.longitudeRows - 7)),
+        meridian: Math.floor(randomAt(index, 73) * 24),
+        phase: randomAt(index, 74) * TAU,
+      }));
+      this.points = Array.from({ length: 70 }, (_, index) => ({
+        x: randomAt(index, 75),
+        y: randomAt(index, 76),
+        alpha: 0.02 + randomAt(index, 77) * 0.06,
+      }));
+    }
+
     draw(time) {
       this.context.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
       if (this.kind === "signals") this.drawSignals(time);
@@ -281,6 +296,7 @@
       if (this.kind === "photophore") this.drawPhotophore(time);
       if (this.kind === "seasons") this.drawSeasons(time);
       if (this.kind === "echoes") this.drawEchoes(time);
+      if (this.kind === "longitude") this.drawLongitude(time);
     }
 
     makeSeasons() {
@@ -765,6 +781,142 @@
         context.fillStyle = `rgba(255, 250, 241, ${point.alpha})`;
         context.fillRect(point.x * width, point.y * height, 1, 1);
       }
+    }
+
+    drawLongitude(time) {
+      const context = this.context;
+      const width = this.width;
+      const height = this.height;
+      const left = width * 0.08;
+      const right = width * 0.92;
+      const top = height * 0.09;
+      const bottom = height * 0.91;
+      const cycle = (time * 0.075) % 1;
+      const movingRow = this.longitudeRows;
+
+      const background = context.createLinearGradient(0, 0, width, height);
+      background.addColorStop(0, "#080b18");
+      background.addColorStop(0.58, "#11162d");
+      background.addColorStop(1, "#090a13");
+      context.fillStyle = background;
+      context.fillRect(0, 0, width, height);
+
+      const glow = context.createRadialGradient(
+        width * 0.78,
+        height * 0.12,
+        0,
+        width * 0.78,
+        height * 0.12,
+        width * 0.7,
+      );
+      glow.addColorStop(0, "rgba(215, 141, 103, 0.17)");
+      glow.addColorStop(1, "rgba(0, 0, 0, 0)");
+      context.fillStyle = glow;
+      context.fillRect(0, 0, width, height);
+
+      for (const point of this.points) {
+        context.fillStyle = `rgba(238, 233, 223, ${point.alpha})`;
+        context.fillRect(point.x * width, point.y * height, 1, 1);
+      }
+
+      for (let meridian = 0; meridian < 24; meridian++) {
+        const x = lerp(left, right, meridian / 23);
+        context.beginPath();
+        context.moveTo(x, top);
+        context.lineTo(x, bottom);
+        context.strokeStyle =
+          meridian % 6 === 0
+            ? "rgba(126, 145, 216, 0.22)"
+            : "rgba(126, 145, 216, 0.11)";
+        context.lineWidth = meridian % 6 === 0 ? 0.9 : 0.55;
+        context.stroke();
+      }
+
+      const displacement = (row, u) => {
+        let offset =
+          Math.sin(u * TAU * (1.8 + randomAt(row, 78) * 1.8) + row * 0.31) *
+          height *
+          0.009;
+        for (const knot of this.longitudeKnots) {
+          if (knot.row > row) continue;
+          const age = row - knot.row;
+          const distance = u - knot.meridian / 23;
+          offset +=
+            Math.sin(distance * 17 - age * 0.43 + knot.phase) *
+            Math.exp(-Math.abs(distance) * 8) *
+            Math.exp(-age / 18) *
+            height *
+            0.014;
+        }
+        return offset;
+      };
+
+      const drawRow = (row, y, fromU, toU, alpha, lineWidth) => {
+        const steps = Math.max(2, Math.ceil(Math.abs(toU - fromU) * 64));
+        context.beginPath();
+        for (let step = 0; step <= steps; step++) {
+          const u = lerp(fromU, toU, step / steps);
+          const x = lerp(left, right, u);
+          const pointY = y + displacement(row, u);
+          if (step === 0) context.moveTo(x, pointY);
+          else context.lineTo(x, pointY);
+        }
+        context.strokeStyle = `rgba(126, 145, 216, ${alpha})`;
+        context.lineWidth = lineWidth;
+        context.lineCap = "round";
+        context.stroke();
+      };
+
+      const spacing = (bottom - top - 28) / (this.longitudeRows + 1);
+      for (let row = 0; row < this.longitudeRows; row++) {
+        drawRow(
+          row,
+          top + (row + 1) * spacing,
+          0,
+          1,
+          0.18 + (row / this.longitudeRows) * 0.36,
+          0.8,
+        );
+      }
+
+      for (const knot of this.longitudeKnots) {
+        const u = knot.meridian / 23;
+        const x = lerp(left, right, u);
+        const y = top + (knot.row + 1) * spacing + displacement(knot.row, u);
+        context.save();
+        context.translate(x, y);
+        context.rotate(Math.PI / 4);
+        context.fillStyle = "#d78d67";
+        context.shadowColor = "#d78d67";
+        context.shadowBlur = 9;
+        context.fillRect(-2, -2, 4, 4);
+        context.restore();
+      }
+
+      const reverse = movingRow % 2 === 1;
+      const startU = reverse ? 1 : 0;
+      const shuttleU = reverse ? 1 - cycle : cycle;
+      const currentY = bottom - 5;
+      drawRow(movingRow, currentY, startU, shuttleU, 0.9, 1.7);
+      const shuttleX = lerp(left, right, shuttleU);
+      const shuttleY = currentY + displacement(movingRow, shuttleU);
+      context.save();
+      context.translate(shuttleX, shuttleY);
+      context.fillStyle = "#d78d67";
+      context.shadowColor = "#d78d67";
+      context.shadowBlur = 18;
+      context.beginPath();
+      context.moveTo(-8, 0);
+      context.lineTo(0, -3.2);
+      context.lineTo(8, 0);
+      context.lineTo(0, 3.2);
+      context.closePath();
+      context.fill();
+      context.restore();
+
+      context.strokeStyle = "rgba(238, 233, 223, 0.12)";
+      context.lineWidth = 1;
+      context.strokeRect(left - 13, top - 17, right - left + 26, bottom - top + 31);
     }
 
     drawSignals(time) {

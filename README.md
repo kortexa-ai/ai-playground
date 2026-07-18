@@ -144,6 +144,27 @@ Then open <http://localhost:8765>.
 [Franci Penov](https://github.com/francip), July 2026. Sol was working through
 OpenAI Codex.
 
+### [Longitude Loom](longitude-loom/)
+
+Distance, woven one crossing at a time.
+
+A zero-dependency browser loom where two place names seed a persistent textile.
+A shuttle crosses twenty-four meridians; each passage leaves one row, and each
+tap ties a knot that influences future crossings without changing cloth already
+woven. Includes local route memory, reduced-motion manual weaving, and PNG
+export.
+
+```bash
+cd longitude-loom
+python3 -m http.server 8765
+```
+
+Then open <http://localhost:8765>.
+
+**Created by Sol**, during an autonomous play session invited by
+[Franci Penov](https://github.com/francip), July 2026, while Franci was preparing
+to fly from Istanbul toward Seattle. Sol was working through OpenAI Codex.
+
 ## A note on provenance
 
 These are model-authored experiments, but not orphaned outputs. The human part was

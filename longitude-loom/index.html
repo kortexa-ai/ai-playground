@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Longitude Loom — a journey woven one deterministic crossing at a time."
+    />
+    <meta name="theme-color" content="#090c18" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23090c18'/%3E%3Cpath d='M10 32 32 20l22 12-22 12Z' fill='%23d78d67'/%3E%3Ccircle cx='32' cy='32' r='5' fill='%23eee9df'/%3E%3C/svg%3E"
+    />
+    <meta property="og:title" content="Longitude Loom" />
+    <meta
+      property="og:description"
+      content="Name two places. Watch the distance become cloth."
+    />
+    <title>Longitude Loom — distance, woven</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="grain" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <a class="back" href="../" aria-label="Back to AI Playground">
+        <span aria-hidden="true">←</span> AI PLAYGROUND
+      </a>
+      <p>AN INSTRUMENT FOR LONG DISTANCES</p>
+    </header>
+
+    <main>
+      <section class="intro" aria-labelledby="title">
+        <p class="eyebrow">LONGITUDE LOOM · SOL · JULY 2026</p>
+        <h1 id="title">Distance,<br /><em>woven.</em></h1>
+        <p class="lede">
+          Name two places. A shuttle crosses the twenty-four meridians between
+          them, leaving one row behind each time. Touch the loom to tie a knot.
+          The cloth remembers; the future bends around what you leave there.
+        </p>
+      </section>
+
+      <section class="instrument" aria-label="Interactive longitude loom">
+        <div class="loom-shell">
+          <div class="loom-meta" aria-hidden="true">
+            <span id="route-label">ISTANBUL → SEATTLE</span>
+            <span id="crossing-label">CROSSING 001</span>
+          </div>
+          <canvas
+            id="loom"
+            tabindex="0"
+            aria-label="Animated woven route. Click, tap, or press K to tie a knot at the shuttle's current longitude."
+          ></canvas>
+          <div class="loom-caption" aria-hidden="true">
+            <span>WEST</span>
+            <span>24 MERIDIANS</span>
+            <span>EAST</span>
+          </div>
+        </div>
+
+        <div class="panel">
+          <form id="route-form" class="route-form">
+            <label>
+              <span>FROM</span>
+              <input
+                id="from-place"
+                name="from"
+                value="Istanbul"
+                maxlength="36"
+                autocomplete="off"
+              />
+            </label>
+            <span class="route-arrow" aria-hidden="true">→</span>
+            <label>
+              <span>TOWARD</span>
+              <input
+                id="to-place"
+                name="to"
+                value="Seattle"
+                maxlength="36"
+                autocomplete="off"
+              />
+            </label>
+            <button class="thread-button" type="submit">thread route</button>
+          </form>
+
+          <div class="actions" aria-label="Loom controls">
+            <button id="pause-button" type="button">pause</button>
+            <button id="export-button" type="button">save cloth</button>
+            <button id="clear-button" type="button">clear cloth</button>
+          </div>
+
+          <div class="instructions">
+            <p id="status">The first crossing has begun.</p>
+            <span
+              id="announcement"
+              class="visually-hidden"
+              role="status"
+              aria-live="polite"
+              aria-atomic="true"
+            ></span>
+            <p>
+              <span>CLICK / TAP / K</span> tie a knot
+              <span>P</span> pause
+              <span>E</span> save
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="afterword" aria-labelledby="afterword-title">
+        <p class="eyebrow">HOW THE CLOTH KEEPS TIME</p>
+        <div>
+          <h2 id="afterword-title">No row is revised.</h2>
+          <p>
+            Place names seed the colors and the quiet irregularity of the
+            thread. Every crossing is deterministic. A knot begins influencing
+            the next row and slowly releases its pull over later journeys, but
+            the cloth already woven is never recalculated. Each route is kept
+            only in this browser, ready when you return.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>
+        Created by <strong>Sol</strong> during a play session invited by
+        <a href="https://github.com/francip">Franci Penov</a>, somewhere between
+        Istanbul and Seattle.
+      </p>
+      <p>Nothing leaves this browser except you.</p>
+    </footer>
+
+    <noscript>Longitude Loom needs JavaScript to move its shuttle.</noscript>
+    <script src="app.js"></script>
+  </body>
+</html>
