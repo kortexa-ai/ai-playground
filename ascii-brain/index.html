@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="ASCII Brain — a Clifford strange attractor rendered as ASCII density art. Six numbers that accidentally become anatomy."
+    />
+    <meta name="theme-color" content="#090a0d" />
+    <title>ASCII Brain — grow a brain from six numbers</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23090a0d'/%3E%3Ctext x='16' y='23' font-size='18' text-anchor='middle'%3E%F0%9F%A7%A0%3C/text%3E%3C/svg%3E"
+    />
+    <style>
+      :root {
+        --ink: #ebe2d8;
+        --dim: rgba(235, 226, 216, 0.55);
+        --faint: rgba(235, 226, 216, 0.32);
+        --line: rgba(235, 226, 216, 0.16);
+        --ember: #d98c67;
+        --ember-bright: #e19f7c;
+        --bg: #090a0d;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      html,
+      body {
+        height: 100%;
+      }
+
+      body {
+        background: var(--bg);
+        color: var(--ink);
+        font-family:
+          ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono",
+          monospace;
+        font-size: 14px;
+        display: flex;
+        flex-direction: column;
+        padding: clamp(14px, 2.4vw, 30px);
+        gap: 14px;
+      }
+
+      header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      .wordmark {
+        letter-spacing: 0.22em;
+        font-size: 13px;
+      }
+
+      .wordmark span {
+        color: var(--ember);
+      }
+
+      header a {
+        color: var(--dim);
+        text-decoration: none;
+        font-size: 12px;
+        letter-spacing: 0.08em;
+      }
+
+      header a:hover,
+      header a:focus-visible {
+        color: var(--ember-bright);
+      }
+
+      .controls {
+        display: flex;
+        align-items: center;
+        gap: 8px 18px;
+        flex-wrap: wrap;
+        border-top: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+        padding: 10px 0;
+      }
+
+      .presets {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+
+      button {
+        font: inherit;
+        font-size: 12px;
+        letter-spacing: 0.06em;
+        color: var(--dim);
+        background: none;
+        border: 1px solid var(--line);
+        padding: 5px 11px;
+        cursor: pointer;
+      }
+
+      button:hover,
+      button:focus-visible {
+        color: var(--ink);
+        border-color: rgba(235, 226, 216, 0.4);
+      }
+
+      button.active {
+        color: var(--bg);
+        background: var(--ember);
+        border-color: var(--ember);
+      }
+
+      button.roll {
+        border-style: dashed;
+        color: var(--ember-bright);
+      }
+
+      .params {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        color: var(--faint);
+        font-size: 12px;
+      }
+
+      .params label {
+        display: flex;
+        gap: 5px;
+        align-items: center;
+      }
+
+      .params input {
+        font: inherit;
+        width: 62px;
+        color: var(--ink);
+        background: none;
+        border: none;
+        border-bottom: 1px solid var(--line);
+        padding: 3px 2px;
+      }
+
+      .params input:focus {
+        outline: none;
+        border-bottom-color: var(--ember);
+      }
+
+      #screen {
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+        line-height: 1.05;
+        font-size: 13px;
+        color: var(--ink);
+        text-shadow: 0 0 9px rgba(225, 159, 124, 0.22);
+        user-select: none;
+      }
+
+      .status {
+        color: var(--dim);
+        font-size: 12px;
+        white-space: pre-wrap;
+      }
+
+      .status .keep {
+        color: var(--ember-bright);
+      }
+
+      footer {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+        color: var(--faint);
+        font-size: 11px;
+        letter-spacing: 0.04em;
+        border-top: 1px solid var(--line);
+        padding-top: 10px;
+      }
+
+      footer a {
+        color: var(--dim);
+      }
+
+      footer a:hover,
+      footer a:focus-visible {
+        color: var(--ember-bright);
+      }
+
+      @media (max-width: 640px) {
+        #screen {
+          font-size: 9px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <p class="wordmark"><span>⌁</span> ASCII BRAIN</p>
+      <a href="../">← back to the playground</a>
+    </header>
+
+    <div class="controls">
+      <div class="presets" id="presets" role="group" aria-label="Presets"></div>
+      <button type="button" class="roll" id="roll">random</button>
+      <div class="params">
+        <label>a <input id="pa" type="number" step="0.1" /></label>
+        <label>b <input id="pb" type="number" step="0.1" /></label>
+        <label>c <input id="pc" type="number" step="0.1" /></label>
+        <label>d <input id="pd" type="number" step="0.1" /></label>
+      </div>
+    </div>
+
+    <pre
+      id="screen"
+      role="img"
+      aria-label="A Clifford strange attractor rendered as ASCII density art"
+    ></pre>
+    <p class="status" id="status"></p>
+
+    <footer>
+      <p>x' = sin(a·y) + c·cos(a·x) &nbsp;·&nbsp; y' = sin(b·x) + d·cos(b·y)</p>
+      <p>
+        the original lives in the terminal:
+        <a href="brain.py" download>brain.py</a> — no install, no pip, no
+        dependencies
+      </p>
+    </footer>
+
+    <script>
+      (() => {
+        "use strict";
+
+        const RAMP = " .:-=+*#%@";
+        const PRESETS = {
+          cortex: [-1.7, 1.8, -1.9, -0.4],
+          jellyfish: [-1.4, 1.6, 1.0, 0.7],
+          moth: [1.6, -0.6, -1.2, 1.6],
+          vortex: [-1.8, -2.0, -0.5, -0.9],
+          ribbon: [-1.7, 1.3, -0.1, -1.2],
+          orchid: [1.5, -1.8, 1.6, 0.9],
+        };
+
+        const screen = document.getElementById("screen");
+        const status = document.getElementById("status");
+        const presetBar = document.getElementById("presets");
+        const inputs = ["pa", "pb", "pc", "pd"].map((id) =>
+          document.getElementById(id),
+        );
+
+        let name = "cortex";
+        let params = PRESETS.cortex.slice();
+
+        // Same math as brain.py: simultaneous update, density grid,
+        // gamma-curved ramp lookup.
+        function render(a, b, c, d, cols, rows) {
+          const grid = new Float64Array(cols * rows);
+          const lo = -2.4;
+          const span = 4.8;
+          const iters = Math.min(
+            1200000,
+            Math.max(150000, cols * rows * 140),
+          );
+          let x = 0;
+          let y = 0;
+          for (let i = 0; i < iters; i++) {
+            const nx = Math.sin(a * y) + c * Math.cos(a * x);
+            const ny = Math.sin(b * x) + d * Math.cos(b * y);
+            x = nx;
+            y = ny;
+            const px = Math.floor(((x - lo) / span) * (cols - 1));
+            const py = Math.floor(((y - lo) / span) * (rows - 1));
+            if (px >= 0 && px < cols && py >= 0 && py < rows) {
+              grid[py * cols + px]++;
+            }
+          }
+          let peak = 1;
+          for (let i = 0; i < grid.length; i++) {
+            if (grid[i] > peak) peak = grid[i];
+          }
+          const lines = [];
+          for (let row = 0; row < rows; row++) {
+            let line = "";
+            for (let col = 0; col < cols; col++) {
+              const v = grid[row * cols + col];
+              line += v
+                ? RAMP[
+                    Math.min(
+                      RAMP.length - 1,
+                      Math.floor(Math.pow(v / peak, 0.42) * (RAMP.length - 1)),
+                    )
+                  ]
+                : " ";
+            }
+            lines.push(line);
+          }
+          return lines.join("\n");
+        }
+
+        function measureCell() {
+          const probe = document.createElement("span");
+          probe.textContent = "@".repeat(40);
+          probe.style.visibility = "hidden";
+          screen.appendChild(probe);
+          const rect = probe.getBoundingClientRect();
+          screen.removeChild(probe);
+          return { w: rect.width / 40 || 8, h: rect.height || 14 };
+        }
+
+        function draw() {
+          const cell = measureCell();
+          const cols = Math.max(
+            40,
+            Math.min(220, Math.floor(screen.clientWidth / cell.w)),
+          );
+          const rows = Math.max(
+            20,
+            Math.min(100, Math.floor(screen.clientHeight / cell.h)),
+          );
+          const [a, b, c, d] = params;
+          screen.textContent = render(a, b, c, d, cols, rows);
+          let line = `${name}:  a=${a}  b=${b}  c=${c}  d=${d}   (${cols}x${rows})`;
+          status.innerHTML = "";
+          status.appendChild(document.createTextNode(line));
+          if (name === "random") {
+            const keep = document.createElement("span");
+            keep.className = "keep";
+            keep.textContent = `\nkeep it:  python3 brain.py ${a} ${b} ${c} ${d}`;
+            status.appendChild(keep);
+          }
+          for (const button of presetBar.children) {
+            button.classList.toggle("active", button.textContent === name);
+          }
+        }
+
+        function setParams(nextName, nextParams) {
+          name = nextName;
+          params = nextParams.slice();
+          inputs.forEach((input, index) => {
+            input.value = params[index];
+          });
+          draw();
+        }
+
+        for (const preset of Object.keys(PRESETS)) {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.textContent = preset;
+          button.addEventListener("click", () =>
+            setParams(preset, PRESETS[preset]),
+          );
+          presetBar.appendChild(button);
+        }
+
+        document.getElementById("roll").addEventListener("click", () => {
+          const rolled = Array.from(
+            { length: 4 },
+            () => Math.round((Math.random() * 4 - 2) * 1000) / 1000,
+          );
+          setParams("random", rolled);
+        });
+
+        let editTimer = 0;
+        inputs.forEach((input, index) => {
+          input.addEventListener("input", () => {
+            const value = parseFloat(input.value);
+            if (!Number.isFinite(value)) return;
+            params[index] = value;
+            name = "custom";
+            clearTimeout(editTimer);
+            editTimer = setTimeout(draw, 250);
+          });
+        });
+
+        let resizeTimer = 0;
+        addEventListener("resize", () => {
+          clearTimeout(resizeTimer);
+          resizeTimer = setTimeout(draw, 150);
+        });
+
+        setParams("cortex", PRESETS.cortex);
+      })();
+    </script>
+  </body>
+</html>

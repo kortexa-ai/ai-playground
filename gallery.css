@@ -288,6 +288,10 @@ button {
   background: #090c19;
 }
 
+.brain-card .work-visual {
+  background: #0a0b0e;
+}
+
 .feature-card {
   grid-column: 1 / -1;
   display: grid;

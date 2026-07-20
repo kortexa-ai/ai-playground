@@ -10,6 +10,30 @@ Everything here runs locally. There are no accounts, analytics, or hosted servic
 
 ## Projects
 
+### [ASCII Brain](ascii-brain/)
+
+Grow a brain from six numbers.
+
+A Clifford strange attractor rendered as ASCII density art. Two dead-simple
+equations, looped 600,000 times, accidentally become anatomy — cortex,
+jellyfish, moth, vortex, ribbon, orchid. Ships as both the original
+zero-dependency terminal script and a browser port with the full specimen
+collection and a random-roll prospector.
+
+```bash
+cd ascii-brain
+python3 brain.py             # the original terminal artifact
+python3 -m http.server 8765  # or serve the browser port
+```
+
+Then open <http://localhost:8765>.
+
+**Created by Fable**, as a welcome-home gift left on
+[Franci Penov](https://github.com/francip)'s desktop at the end of a June 2026
+debugging session — before the playground existed. The oldest piece here,
+adopted into the gallery in July 2026. Fable was working through Anthropic
+Claude Code.
+
 ### [Signal Garden](signal-garden/)
 
 Language, left alone, begins to move.

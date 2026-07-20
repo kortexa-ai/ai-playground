@@ -142,6 +142,7 @@
       if (this.kind === "seasons") this.makeSeasons();
       if (this.kind === "echoes") this.makeEchoes();
       if (this.kind === "longitude") this.makeLongitude();
+      if (this.kind === "brain") this.makeBrain();
       this.draw(3.4);
     }
 
@@ -297,6 +298,107 @@
       if (this.kind === "seasons") this.drawSeasons(time);
       if (this.kind === "echoes") this.drawEchoes(time);
       if (this.kind === "longitude") this.drawLongitude(time);
+      if (this.kind === "brain") this.drawBrain(time);
+    }
+
+    makeBrain() {
+      // The real Clifford attractor from ascii-brain, pre-rendered as ASCII
+      // layers for each specimen so the frame loop only crossfades images.
+      const ramp = " .:-=+*#%@";
+      const specimens = [
+        [-1.7, 1.8, -1.9, -0.4], // cortex
+        [-1.4, 1.6, 1.0, 0.7], // jellyfish
+        [1.6, -0.6, -1.2, 1.6], // moth
+        [-1.8, -2.0, -0.5, -0.9], // vortex
+        [-1.7, 1.3, -0.1, -1.2], // ribbon
+        [1.5, -1.8, 1.6, 0.9], // orchid
+      ];
+      const cols = clamp(Math.round(this.width / 8), 60, 120);
+      const rows = clamp(Math.round(this.height / 13), 26, 46);
+      const cellWidth = this.width / cols;
+      const cellHeight = this.height / rows;
+      const lo = -2.4;
+      const span = 4.8;
+      const iters = cols * rows * 50;
+      this.brainFrames = specimens.map(([a, b, c, d]) => {
+        const grid = new Float32Array(cols * rows);
+        let x = 0;
+        let y = 0;
+        for (let i = 0; i < iters; i++) {
+          const nx = Math.sin(a * y) + c * Math.cos(a * x);
+          y = Math.sin(b * x) + d * Math.cos(b * y);
+          x = nx;
+          const px = Math.floor(((x - lo) / span) * (cols - 1));
+          const py = Math.floor(((y - lo) / span) * (rows - 1));
+          if (px >= 0 && px < cols && py >= 0 && py < rows) {
+            grid[py * cols + px]++;
+          }
+        }
+        let peak = 1;
+        for (let i = 0; i < grid.length; i++) {
+          if (grid[i] > peak) peak = grid[i];
+        }
+        const layer = document.createElement("canvas");
+        layer.width = Math.max(1, Math.round(this.width * this.dpr));
+        layer.height = Math.max(1, Math.round(this.height * this.dpr));
+        const ink = layer.getContext("2d");
+        ink.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+        ink.font = cellHeight * 0.95 + "px ui-monospace, Menlo, monospace";
+        ink.textBaseline = "top";
+        for (let row = 0; row < rows; row++) {
+          for (let col = 0; col < cols; col++) {
+            const v = grid[row * cols + col];
+            if (!v) continue;
+            const heat = Math.pow(v / peak, 0.42);
+            const glyph =
+              ramp[Math.min(ramp.length - 1, Math.floor(heat * (ramp.length - 1)))];
+            ink.fillStyle =
+              heat > 0.72
+                ? "rgba(225, 159, 124, " + (0.5 + heat * 0.5) + ")"
+                : "rgba(235, 226, 216, " + (0.12 + heat * 0.7) + ")";
+            ink.fillText(glyph, col * cellWidth, row * cellHeight);
+          }
+        }
+        return layer;
+      });
+    }
+
+    drawBrain(time) {
+      const context = this.context;
+      const backdrop = context.createLinearGradient(0, 0, 0, this.height);
+      backdrop.addColorStop(0, "#0d0f13");
+      backdrop.addColorStop(1, "#07080b");
+      context.fillStyle = backdrop;
+      context.fillRect(0, 0, this.width, this.height);
+      if (!this.brainFrames || !this.brainFrames.length) return;
+
+      // hold each specimen, then crossfade to the next
+      const count = this.brainFrames.length;
+      const cycle = (time * 0.14) % count;
+      const index = Math.floor(cycle);
+      const next = (index + 1) % count;
+      const blend = smoothstep(clamp((cycle - index - 0.8) / 0.2, 0, 1));
+      const flicker =
+        0.93 + Math.sin(time * 9.3) * 0.02 + Math.sin(time * 23.7) * 0.012;
+
+      context.save();
+      context.setTransform(1, 0, 0, 1, 0, 0);
+      context.globalAlpha = (1 - blend) * flicker;
+      context.drawImage(this.brainFrames[index], 0, 0);
+      if (blend > 0) {
+        context.globalAlpha = blend * flicker;
+        context.drawImage(this.brainFrames[next], 0, 0);
+      }
+      context.restore();
+
+      // a slow phosphor scanline drifting down the tube
+      const scanY = ((time * 11) % (this.height + 60)) - 30;
+      const scan = context.createLinearGradient(0, scanY - 16, 0, scanY + 16);
+      scan.addColorStop(0, "rgba(225, 159, 124, 0)");
+      scan.addColorStop(0.5, "rgba(225, 159, 124, 0.045)");
+      scan.addColorStop(1, "rgba(225, 159, 124, 0)");
+      context.fillStyle = scan;
+      context.fillRect(0, scanY - 16, this.width, 32);
     }
 
     makeSeasons() {
