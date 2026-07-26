@@ -143,6 +143,7 @@
       if (this.kind === "echoes") this.makeEchoes();
       if (this.kind === "longitude") this.makeLongitude();
       if (this.kind === "brain") this.makeBrain();
+      if (this.kind === "rounds") this.makeRounds();
       this.draw(3.4);
     }
 
@@ -299,6 +300,7 @@
       if (this.kind === "echoes") this.drawEchoes(time);
       if (this.kind === "longitude") this.drawLongitude(time);
       if (this.kind === "brain") this.drawBrain(time);
+      if (this.kind === "rounds") this.drawRounds(time);
     }
 
     makeBrain() {
@@ -399,6 +401,155 @@
       scan.addColorStop(1, "rgba(225, 159, 124, 0)");
       context.fillStyle = scan;
       context.fillRect(0, scanY - 16, this.width, 32);
+    }
+
+    makeRounds() {
+      this.roundSteps = 16;
+      this.roundRings = 7;
+      // The same wandering phrase the instrument seeds itself with.
+      this.roundNotes = [
+        [0, 3],
+        [3, 5],
+        [4, 4],
+        [6, 6],
+        [8, 3],
+        [11, 1],
+        [12, 2],
+        [14, 4],
+      ];
+      this.roundVoices = [
+        { delay: 0, shift: 0, hue: 38, gain: 1 },
+        { delay: 4, shift: 0, hue: 189, gain: 0.7 },
+        { delay: 8, shift: 2, hue: 151, gain: 0.55 },
+        { delay: 2, shift: -3, hue: 284, gain: 0.46 },
+      ];
+    }
+
+    drawRounds(time) {
+      const context = this.context;
+      const cx = this.width / 2;
+      const cy = this.height / 2;
+      const outer = Math.min(this.width, this.height) * 0.4;
+      const inner = outer * 0.3;
+      const gap = (outer - inner) / this.roundRings;
+      const steps = this.roundSteps;
+
+      const sky = context.createRadialGradient(cx, cy, inner * 0.2, cx, cy, outer * 1.8);
+      sky.addColorStop(0, "#141a2b");
+      sky.addColorStop(0.6, "#0b0f1e");
+      sky.addColorStop(1, "#070912");
+      context.fillStyle = sky;
+      context.fillRect(0, 0, this.width, this.height);
+
+      // one turn every six seconds
+      const head = ((time * steps) / 6) % steps;
+      const at = (step, ring) => {
+        const angle = (step / steps) * TAU - Math.PI / 2;
+        const radius = inner + (ring + 0.5) * gap;
+        return {
+          x: cx + Math.cos(angle) * radius,
+          y: cy + Math.sin(angle) * radius,
+        };
+      };
+
+      context.save();
+      context.globalCompositeOperation = "lighter";
+
+      context.strokeStyle = "rgba(150, 178, 226, 0.06)";
+      context.lineWidth = 1;
+      for (let ring = 0; ring <= this.roundRings; ring++) {
+        context.beginPath();
+        context.arc(cx, cy, inner + ring * gap, 0, TAU);
+        context.stroke();
+      }
+      for (let step = 0; step < steps; step += 4) {
+        const angle = (step / steps) * TAU - Math.PI / 2;
+        context.strokeStyle = "rgba(160, 188, 236, 0.1)";
+        context.beginPath();
+        context.moveTo(cx + Math.cos(angle) * inner, cy + Math.sin(angle) * inner);
+        context.lineTo(cx + Math.cos(angle) * outer, cy + Math.sin(angle) * outer);
+        context.stroke();
+      }
+
+      for (const note of this.roundNotes) {
+        let glow = 0;
+        let hue = 38;
+        for (const voice of this.roundVoices) {
+          // how long since this voice last passed this note
+          let since = head - (note[0] + voice.delay);
+          since = ((since % steps) + steps) % steps;
+          const age = (since * 6) / steps;
+          if (age > 1.4) continue;
+          const strength = (1 - age / 1.4) * voice.gain;
+          if (strength > glow) {
+            glow = strength;
+            hue = voice.hue;
+          }
+        }
+        const point = at(note[0], note[1]);
+        const size = gap * 0.3;
+        context.fillStyle =
+          "hsla(" + hue + ", " + (58 + glow * 34) + "%, " + (62 + glow * 26) + "%, " + (0.5 + glow * 0.5) + ")";
+        context.beginPath();
+        context.arc(point.x, point.y, size * (0.66 + glow * 0.5), 0, TAU);
+        context.fill();
+
+        if (glow > 0.02) {
+          const halo = context.createRadialGradient(point.x, point.y, 0, point.x, point.y, size * 3.6);
+          halo.addColorStop(0, "hsla(" + hue + ", 88%, 72%, " + glow * 0.4 + ")");
+          halo.addColorStop(1, "hsla(0, 0%, 0%, 0)");
+          context.fillStyle = halo;
+          context.beginPath();
+          context.arc(point.x, point.y, size * 3.6, 0, TAU);
+          context.fill();
+
+          context.strokeStyle = "hsla(" + hue + ", 84%, 70%, " + glow * 0.3 + ")";
+          context.lineWidth = 1.2;
+          context.beginPath();
+          context.arc(point.x, point.y, size + (1 - glow) * gap * 2.4, 0, TAU);
+          context.stroke();
+        }
+      }
+
+      // each voice reading its own part of the one phrase
+      this.roundVoices.forEach((voice, index) => {
+        const angle = (((head - voice.delay) / steps) % 1) * TAU - Math.PI / 2;
+        context.strokeStyle = "hsla(" + voice.hue + ", 78%, 66%, " + (index === 0 ? 0.5 : 0.24) + ")";
+        context.lineWidth = index === 0 ? 1.8 : 1.1;
+        context.beginPath();
+        context.moveTo(cx + Math.cos(angle) * (outer + 3), cy + Math.sin(angle) * (outer + 3));
+        context.lineTo(
+          cx + Math.cos(angle) * (outer + 11 + index * 3),
+          cy + Math.sin(angle) * (outer + 11 + index * 3),
+        );
+        context.stroke();
+      });
+
+      const headAngle = (head / steps) * TAU - Math.PI / 2;
+      const sweep = context.createLinearGradient(
+        cx,
+        cy,
+        cx + Math.cos(headAngle) * outer,
+        cy + Math.sin(headAngle) * outer,
+      );
+      sweep.addColorStop(0, "hsla(38, 90%, 70%, 0)");
+      sweep.addColorStop(1, "hsla(38, 92%, 72%, 0.45)");
+      context.strokeStyle = sweep;
+      context.lineWidth = 1.8;
+      context.beginPath();
+      context.moveTo(cx + Math.cos(headAngle) * inner * 0.7, cy + Math.sin(headAngle) * inner * 0.7);
+      context.lineTo(cx + Math.cos(headAngle) * (outer + 3), cy + Math.sin(headAngle) * (outer + 3));
+      context.stroke();
+
+      context.restore();
+
+      context.fillStyle = "rgba(7, 9, 18, 0.9)";
+      context.beginPath();
+      context.arc(cx, cy, inner * 0.72, 0, TAU);
+      context.fill();
+      context.strokeStyle = "rgba(160, 188, 236, 0.14)";
+      context.lineWidth = 1;
+      context.stroke();
     }
 
     makeSeasons() {

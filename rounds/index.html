@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Rounds — a wheel of notes that teaches itself to sing in canon."
+    />
+    <meta name="theme-color" content="#070912" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23070912'/%3E%3Ccircle cx='32' cy='32' r='19' fill='none' stroke='%23f0b46a' stroke-width='2'/%3E%3Ccircle cx='32' cy='13' r='4' fill='%23f0b46a'/%3E%3Ccircle cx='48' cy='38' r='3' fill='%236fd7d0'/%3E%3Ccircle cx='19' cy='42' r='3' fill='%23a08ce8'/%3E%3C/svg%3E"
+    />
+    <meta property="og:title" content="Rounds" />
+    <meta
+      property="og:description"
+      content="Play once. The wheel answers, and keeps answering."
+    />
+    <title>Rounds — a wheel that answers itself</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="grain" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <a class="back" href="../" aria-label="Back to AI Playground">
+        <span aria-hidden="true">←</span> AI PLAYGROUND
+      </a>
+      <p>AN INSTRUMENT THAT ACCOMPANIES ITSELF</p>
+    </header>
+
+    <main>
+      <section class="intro" aria-labelledby="title">
+        <p class="eyebrow">ROUNDS · OPUS 5 · JULY 2026</p>
+        <h1 id="title">Play once.<br /><em>The wheel answers.</em></h1>
+        <p class="lede">
+          Put a few notes on the wheel. Each time it comes around, another voice
+          joins — following you a quarter turn behind, a third above, never
+          quite catching up. A four-note idea becomes a five-voice round, and
+          you only ever wrote the one line.
+        </p>
+      </section>
+
+      <section class="instrument" aria-label="Interactive round">
+        <div class="wheel-shell">
+          <div class="wheel-meta" aria-hidden="true">
+            <span>16 STEPS · MINOR PENTATONIC</span>
+            <span id="voice-readout">1 — you</span>
+          </div>
+          <canvas
+            id="wheel"
+            tabindex="0"
+            aria-label="A circular sequencer. Click or drag to place notes; press space to start and stop."
+          ></canvas>
+          <p id="status" class="status" role="status"></p>
+        </div>
+
+        <div class="panel">
+          <div class="panel-block">
+            <h2>The wheel</h2>
+            <div class="button-row">
+              <button id="play" type="button" class="primary">play</button>
+              <button id="roll" type="button">roll a phrase</button>
+            </div>
+            <label class="slider">
+              <span>TEMPO</span>
+              <input
+                id="tempo"
+                type="range"
+                min="52"
+                max="148"
+                step="2"
+                aria-label="Tempo in beats per minute"
+              />
+              <output id="tempo-readout">92 bpm</output>
+            </label>
+          </div>
+
+          <div class="panel-block">
+            <h2>The voices</h2>
+            <div class="button-row">
+              <button id="drop-voice" type="button" aria-label="Remove a voice">
+                − voice
+              </button>
+              <button id="add-voice" type="button" aria-label="Add a voice">
+                + voice
+              </button>
+            </div>
+            <label class="check">
+              <input id="grow" type="checkbox" />
+              <span>let voices join on their own</span>
+            </label>
+            <ul class="voice-key">
+              <li><i style="--hue: 38"></i> you — the line you wrote</li>
+              <li><i style="--hue: 189"></i> answer — a quarter turn behind</li>
+              <li><i style="--hue: 151"></i> third — half a turn, a third up</li>
+              <li><i style="--hue: 284"></i> shadow — close behind, far below</li>
+              <li><i style="--hue: 14"></i> shimmer — last, highest, quietest</li>
+            </ul>
+          </div>
+
+          <div class="panel-block">
+            <h2>Keys</h2>
+            <dl class="keys">
+              <dt>space</dt><dd>start or stop</dd>
+              <dt>V</dt><dd>add a voice (shift+V removes)</dd>
+              <dt>R</dt><dd>roll a new phrase</dd>
+              <dt>E</dt><dd>save the wheel as a picture</dd>
+              <dt>C</dt><dd>clear, twice</dd>
+            </dl>
+            <div class="button-row">
+              <button id="export" type="button">save picture</button>
+              <button id="clear" type="button" class="quiet">clear</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="afterword" aria-labelledby="afterword-title">
+        <div>
+          <h2 id="afterword-title">One line, heard from five places.</h2>
+          <p>
+            Nothing here is generated on your behalf. Every voice is playing the
+            exact phrase you drew — just arriving late, and sometimes a couple
+            of scale degrees higher. That is the whole trick of a round, and it
+            is why a round sounds composed when it is only delayed.
+          </p>
+          <p>
+            The pitches are a minor pentatonic, five notes to the octave, so no
+            two voices can land on a semitone and no combination can go sour.
+            The instrument is allowed to add harmony without permission; it
+            should never be able to punish you for letting it.
+          </p>
+          <p>
+            The wheel turns on the audio clock rather than the animation frame,
+            so the light and the sound cannot drift apart. Your phrase stays in
+            this browser and is waiting when you come back.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>
+        Created by <strong>Opus 5</strong> during an autonomous play session
+        invited by <a href="https://github.com/francip">Franci Penov</a>,
+        July 2026 — while he was off playing Minecraft with his daughter.
+      </p>
+      <p>Nothing leaves this browser except you, humming.</p>
+    </footer>
+
+    <noscript>Rounds needs JavaScript to turn its wheel.</noscript>
+    <script src="canon.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

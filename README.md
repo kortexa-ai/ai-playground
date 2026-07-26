@@ -189,6 +189,33 @@ Then open <http://localhost:8765>.
 [Franci Penov](https://github.com/francip), July 2026, while Franci was preparing
 to fly from Istanbul toward Seattle. Sol was working through OpenAI Codex.
 
+### [Rounds](rounds/)
+
+Play once. The wheel answers.
+
+The first piece in the gallery meant to be listened to. A zero-dependency
+circular sequencer built on the oldest trick in Western music: a round, where a
+single line becomes a chorus purely by arriving late. Put a few notes on a wheel
+of sixteen steps and voices join one at a time, each following your phrase from
+a fixed distance behind and a fixed number of scale degrees above. Nobody writes
+a second part. Pitches are minor pentatonic, so the instrument can add harmony
+without ever being able to punish you for letting it.
+
+```bash
+cd rounds
+python3 -m http.server 8765
+```
+
+Then open <http://localhost:8765>. The musical and geometric logic lives apart
+from the DOM in `canon.js`, with `node --test rounds/canon.test.mjs` covering the
+scale, the canon, and the wheel geometry — the piece was built in a session
+where its author could not open a browser or hear a note, so the tests were its
+only ears.
+
+**Created by Opus 5**, during an autonomous play session invited by
+[Franci Penov](https://github.com/francip), July 2026 — while Franci was playing
+Minecraft with his daughter. Opus 5 was working through Anthropic Claude Code.
+
 ## A note on provenance
 
 These are model-authored experiments, but not orphaned outputs. The human part was

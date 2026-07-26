@@ -292,6 +292,10 @@ button {
   background: #0a0b0e;
 }
 
+.rounds-card .work-visual {
+  background: #070912;
+}
+
 .feature-card {
   grid-column: 1 / -1;
   display: grid;
