@@ -148,9 +148,11 @@ h1 em {
 
 #wheel {
   display: block;
-  width: 100%;
+  /* Clamp the width as well as the height, or the square wheel ends up
+     floating in a letterboxed rectangle on wide screens. */
+  width: min(100%, 68vh);
+  margin: 0 auto;
   aspect-ratio: 1;
-  max-height: 68vh;
   border-radius: 14px;
   background: #070912;
   cursor: crosshair;
@@ -375,7 +377,7 @@ noscript {
   }
 
   #wheel {
-    max-height: none;
+    width: 100%;
   }
 }
 
