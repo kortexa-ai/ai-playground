@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Once Upon — a 27-million-parameter storyteller that lives entirely in your browser tab. No server, no API, just a small mind and a night light."
+    />
+    <meta name="theme-color" content="#0a0913" />
+    <title>Once Upon — a storyteller lives in this tab</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="night" aria-hidden="true">
+      <div class="stars"></div>
+      <div class="vignette"></div>
+    </div>
+
+    <header class="masthead">
+      <p class="folio">FIELD STUDY 08 <span>·</span> LANGUAGE / BEDTIME</p>
+      <h1>ONCE UPON</h1>
+      <p class="tagline">a storyteller lives in this tab</p>
+    </header>
+
+    <main class="book" id="book">
+      <!-- Cover: nothing downloads until the reader opens the book. -->
+      <section class="cover" id="cover">
+        <div class="cover-plate">
+          <p class="cover-word">ONCE&nbsp;UPON</p>
+          <p class="cover-sub">tiny stories, told locally</p>
+        </div>
+        <p class="cover-note">
+          A 27M-parameter language model is sleeping between these covers.
+          Opening the book downloads it into this tab — about 27&nbsp;MB, once.
+          It never phones home; there is no home to phone.
+        </p>
+        <button id="open" class="primary">open the book</button>
+        <div class="load" id="load" hidden>
+          <div class="load-bar"><div class="load-fill" id="load-fill"></div></div>
+          <p class="load-note" id="load-note">waking the storyteller…</p>
+        </div>
+      </section>
+
+      <!-- The writing desk -->
+      <section class="desk" id="desk" hidden>
+        <form id="composer" autocomplete="off">
+          <label class="sr-only" for="seed">Begin the story with</label>
+          <input
+            id="seed"
+            name="seed"
+            type="text"
+            maxlength="200"
+            spellcheck="true"
+            value="Once upon a time"
+          />
+          <button type="submit" class="primary" id="tell">tell me a story</button>
+        </form>
+
+        <div class="knobs">
+          <label class="knob">
+            <span>imagination <em id="temp-label">0.80</em></span>
+            <input id="temp" type="range" min="0.50" max="1.10" step="0.05" value="0.80" />
+          </label>
+          <label class="knob">
+            <span>length</span>
+            <select id="length">
+              <option value="120">a short one</option>
+              <option value="220" selected>a bedtime one</option>
+              <option value="400">a long one</option>
+            </select>
+          </label>
+        </div>
+
+        <article class="page">
+          <div class="story" id="story" aria-live="polite"></div>
+          <span class="caret" id="caret" hidden></span>
+        </article>
+
+        <p class="stats" id="stats"></p>
+      </section>
+    </main>
+
+    <footer class="colophon">
+      <p>
+        Trained overnight on a Mac&nbsp;Mini named snappy; the smaller sibling of an
+        <a href="https://github.com/kortexa-ai/esp32-mind">ESP32-S3 that tells stories over USB</a>.
+        Everything runs in this tab — close it and the storyteller is gone.
+      </p>
+      <p><a href="../">← the playground</a></p>
+    </footer>
+
+    <noscript>
+      <p class="noscript">Once Upon needs JavaScript — the storyteller <em>is</em> JavaScript.</p>
+    </noscript>
+
+    <script src="app.js"></script>
+  </body>
+</html>

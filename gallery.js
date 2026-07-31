@@ -144,6 +144,7 @@
       if (this.kind === "longitude") this.makeLongitude();
       if (this.kind === "brain") this.makeBrain();
       if (this.kind === "rounds") this.makeRounds();
+      if (this.kind === "storybook") this.makeStorybook();
       this.draw(3.4);
     }
 
@@ -301,6 +302,7 @@
       if (this.kind === "longitude") this.drawLongitude(time);
       if (this.kind === "brain") this.drawBrain(time);
       if (this.kind === "rounds") this.drawRounds(time);
+      if (this.kind === "storybook") this.drawStorybook(time);
     }
 
     makeBrain() {
@@ -403,6 +405,94 @@
       context.fillRect(0, scanY - 16, this.width, 32);
     }
 
+    makeStorybook() {
+      // Word widths per line, deterministic so every visit writes the same page.
+      this.storyLines = [];
+      for (let line = 0; line < 7; line++) {
+        const words = [];
+        let used = line === 0 ? 0.16 : 0; // first line leaves room for the drop cap
+        while (used < 0.92) {
+          const w = 0.05 + randomAt(line * 37 + words.length, 11) * 0.13;
+          if (used + w > 0.96) break;
+          words.push({ x: used, w });
+          used += w + 0.025;
+        }
+        this.storyLines.push(words);
+      }
+      this.storyTotal = this.storyLines.reduce((n, l) => n + l.length, 0);
+    }
+    drawStorybook(time) {
+      const context = this.context;
+      const w = this.width;
+      const h = this.height;
+
+      const sky = context.createRadialGradient(w * 0.5, -h * 0.2, h * 0.1, w * 0.5, h * 0.5, h * 1.2);
+      sky.addColorStop(0, "#191430");
+      sky.addColorStop(0.55, "#0e0b1d");
+      sky.addColorStop(1, "#080711");
+      context.fillStyle = sky;
+      context.fillRect(0, 0, w, h);
+
+      for (let i = 0; i < 14; i++) {
+        const sx = randomAt(i, 21) * w;
+        const sy = randomAt(i, 22) * h * 0.4;
+        const tw = 0.4 + 0.6 * Math.sin(time * 0.7 + i * 1.7) ** 2;
+        context.fillStyle = `rgba(240, 238, 255, ${0.25 * tw})`;
+        context.fillRect(sx, sy, 1.2, 1.2);
+      }
+
+      const pw = w * 0.56;
+      const ph = h * 0.74;
+      const px = (w - pw) / 2;
+      const py = h * 0.14;
+
+      context.save();
+      context.shadowColor = "rgba(0, 0, 0, 0.55)";
+      context.shadowBlur = 24;
+      context.shadowOffsetY = 10;
+      const paper = context.createLinearGradient(px, py, px, py + ph);
+      paper.addColorStop(0, "#f7f0df");
+      paper.addColorStop(1, "#e7dcc4");
+      context.fillStyle = paper;
+      context.beginPath();
+      context.roundRect(px, py, pw, ph, 4);
+      context.fill();
+      context.restore();
+
+      // The page writes itself over ~9s, rests, then turns.
+      const cycle = 12;
+      const t = (time % cycle) / cycle;
+      const writing = Math.min(1, t / 0.75);
+      const written = Math.floor(writing * this.storyTotal);
+      const fade = t > 0.92 ? (t - 0.92) / 0.08 : 0;
+
+      context.save();
+      context.globalAlpha = 1 - fade;
+
+      // drop cap
+      context.fillStyle = "#8a4a18";
+      const capSize = ph * 0.13;
+      context.fillRect(px + pw * 0.07, py + ph * 0.08, capSize * 0.8, capSize);
+
+      let index = 0;
+      const lineGap = ph * 0.105;
+      for (let line = 0; line < this.storyLines.length; line++) {
+        const ly = py + ph * 0.12 + line * lineGap;
+        for (const word of this.storyLines[line]) {
+          if (index >= written) break;
+          const isHead = index === written - 1 && writing < 1;
+          context.fillStyle = isHead ? "rgba(232, 160, 76, 0.95)" : "rgba(51, 40, 28, 0.72)";
+          if (isHead) {
+            context.shadowColor = "rgba(232, 160, 76, 0.8)";
+            context.shadowBlur = 8;
+          }
+          context.fillRect(px + pw * (0.07 + word.x * 0.86), ly, pw * word.w * 0.86, Math.max(1.5, ph * 0.022));
+          context.shadowBlur = 0;
+          index++;
+        }
+      }
+      context.restore();
+    }
     makeRounds() {
       this.roundSteps = 16;
       this.roundRings = 7;

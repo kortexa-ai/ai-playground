@@ -1,0 +1,284 @@
+[
+ {
+  "text": "Once upon a time",
+  "ids": [
+   433,
+   447,
+   259,
+   405
+  ],
+  "decoded": "Once upon a time"
+ },
+ {
+  "text": "Once upon a time, there was a little fox who couldn't sleep.",
+  "ids": [
+   433,
+   447,
+   259,
+   405,
+   12,
+   406,
+   282,
+   259,
+   403,
+   1665,
+   591,
+   747,
+   430,
+   1357,
+   14
+  ],
+  "decoded": "Once upon a time, there was a little fox who couldn't sleep."
+ },
+ {
+  "text": "Tom said, \"Don't worry! We'll find it.\"",
+  "ids": [
+   784,
+   329,
+   12,
+   335,
+   1341,
+   430,
+   1298,
+   1,
+   771,
+   1517,
+   637,
+   304,
+   426
+  ],
+  "decoded": "Tom said, \"Don't worry! We'll find it.\""
+ },
+ {
+  "text": "  leading spaces and   runs   of spaces",
+  "ids": [
+   221,
+   6491,
+   5344,
+   265,
+   5787,
+   1678,
+   5787,
+   348,
+   5344
+  ],
+  "decoded": "  leading spaces and   runs   of spaces"
+ },
+ {
+  "text": "numbers 123 and 4,567 mixed with words",
+  "ids": [
+   78,
+   3216,
+   12626,
+   19,
+   265,
+   8837,
+   12,
+   21,
+   22,
+   23,
+   2964,
+   344,
+   1802
+  ],
+  "decoded": "numbers 123 and 4,567 mixed with words"
+ },
+ {
+  "text": "café, naïve, jalapeño — and an em-dash",
+  "ids": [
+   67,
+   3727,
+   9712,
+   12,
+   295,
+   65,
+   128,
+   108,
+   343,
+   12,
+   449,
+   407,
+   2013,
+   13614,
+   79,
+   8115,
+   265,
+   421,
+   1696,
+   13,
+   68,
+   1562
+  ],
+  "decoded": "café, naïve, jalapeño — and an em-dash"
+ },
+ {
+  "text": "emoji stress test 🦊🌙✨",
+  "ids": [
+   3132,
+   74,
+   73,
+   1389,
+   540,
+   2545,
+   221,
+   173,
+   254,
+   100,
+   233,
+   173,
+   254,
+   235,
+   248,
+   159,
+   251,
+   102
+  ],
+  "decoded": "emoji stress test 🦊🌙✨"
+ },
+ {
+  "text": "line\nbreaks\n\nand tabs\there",
+  "ids": [
+   7967,
+   199,
+   66,
+   271,
+   776,
+   83,
+   199,
+   199,
+   721,
+   688,
+   9696,
+   198,
+   769
+  ],
+  "decoded": "line\nbreaks\n\nand tabs\there"
+ },
+ {
+  "text": "it's Tom's toy; they're going; we've gone; I'll stay; he'd know",
+  "ids": [
+   274,
+   376,
+   505,
+   376,
+   515,
+   27,
+   365,
+   1261,
+   960,
+   27,
+   369,
+   5065,
+   1482,
+   27,
+   337,
+   1517,
+   906,
+   27,
+   279,
+   2683,
+   695
+  ],
+  "decoded": "it's Tom's toy; they're going; we've gone; I'll stay; he'd know"
+ },
+ {
+  "text": "<|endoftext|> literal text around it",
+  "ids": [
+   0,
+   2785,
+   278,
+   407,
+   6117,
+   525,
+   304
+  ],
+  "decoded": " literal text around it"
+ },
+ {
+  "text": "punctuation!!! ... ??? (parens) [brackets] {braces}",
+  "ids": [
+   80,
+   375,
+   894,
+   85,
+   1368,
+   1,
+   1,
+   1,
+   221,
+   6031,
+   221,
+   31,
+   31,
+   31,
+   15730,
+   80,
+   5948,
+   83,
+   9,
+   221,
+   59,
+   66,
+   419,
+   1668,
+   83,
+   61,
+   221,
+   91,
+   66,
+   419,
+   2019,
+   93
+  ],
+  "decoded": "punctuation!!! ... ??? (parens) [brackets] {braces}"
+ },
+ {
+  "text": "A",
+  "ids": [
+   33
+  ],
+  "decoded": "A"
+ },
+ {
+  "text": " ",
+  "ids": [
+   221
+  ],
+  "decoded": " "
+ },
+ {
+  "text": "",
+  "ids": [],
+  "decoded": ""
+ },
+ {
+  "text": "The quick brown fox jumps over the lazy dog. THE QUICK BROWN FOX.",
+  "ids": [
+   382,
+   1075,
+   1868,
+   1665,
+   3748,
+   745,
+   263,
+   2846,
+   635,
+   14,
+   14605,
+   6932,
+   53,
+   41,
+   12745,
+   374,
+   50,
+   47,
+   55,
+   46,
+   666,
+   47,
+   56,
+   14
+  ],
+  "decoded": "The quick brown fox jumps over the lazy dog. THE QUICK BROWN FOX."
+ }
+]

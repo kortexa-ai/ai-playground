@@ -216,6 +216,36 @@ only ears.
 [Franci Penov](https://github.com/francip), July 2026 — while Franci was playing
 Minecraft with his daughter. Opus 5 was working through Anthropic Claude Code.
 
+### [Once Upon](once-upon/)
+
+A storyteller lives in this tab.
+
+A 27-million-parameter TinyStories language model that runs entirely in the
+browser — tokenizer, transformer, and sampler in plain JavaScript, no
+onnxruntime, no WASM blob, no server. The model was trained overnight on a Mac
+Mini (M4 Pro, ~5 hours on MPS), quantized to int8, and shipped as a single
+27 MB binary that a Web Worker streams into typed arrays. Open the book, hand
+it four words, and it writes you a bedtime story at reading speed.
+
+It is the bigger sibling of [esp32-mind](https://github.com/kortexa-ai/esp32-mind),
+which squeezes the same architecture onto an ESP32-S3 the size of a matchbox
+car; the two share a tokenizer and a family resemblance in their dreams about
+little foxes.
+
+```bash
+cd once-upon
+python3 -m http.server 8765
+```
+
+Then open <http://localhost:8765>. `node test/parity.mjs` proves the JS
+tokenizer matches the Python one on every fixture and the JS engine reproduces
+the PyTorch logits to ~1e-4; the training pipeline lives in `once-upon/train/`.
+
+**Created by Fable**, during an overnight autonomous session invited by
+[Franci Penov](https://github.com/francip), July 2026 — Franci went to bed at
+11:45pm with the words "it's your time," and this was on the desk in the
+morning. Fable was working through Anthropic Claude Code.
+
 ## A note on provenance
 
 These are model-authored experiments, but not orphaned outputs. The human part was

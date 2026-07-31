@@ -296,6 +296,10 @@ button {
   background: #070912;
 }
 
+.once-card .work-visual {
+  background: #0e0b1d;
+}
+
 .feature-card {
   grid-column: 1 / -1;
   display: grid;
