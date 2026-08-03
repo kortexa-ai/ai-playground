@@ -1,0 +1,545 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Babble Bot — a nursery for machines</title>
+<style>
+  :root {
+    --playmat: #dce8e4;
+    --playmat-deep: #cfdeda;
+    --felt: #2e4643;
+    --felt-soft: #5a7370;
+    --rattle: #e8623d;
+    --rattle-soft: #f0906f;
+    --crayon: #3f6bd6;
+    --dead: #9aa8a4;
+    --paper: #f2f5f1;
+    --shadow: rgba(46, 70, 67, 0.14);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--playmat);
+    color: var(--felt);
+    font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100svh;
+    padding: clamp(12px, 3vw, 32px);
+    background-image: radial-gradient(var(--playmat-deep) 1.2px, transparent 1.3px);
+    background-size: 26px 26px;
+  }
+  .rounded { font-family: ui-rounded, "SF Pro Rounded", "Hiragino Maru Gothic ProN", Quicksand, -apple-system, "Segoe UI", sans-serif; }
+  .mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+
+  header { text-align: center; margin-bottom: clamp(10px, 2vh, 20px); }
+  header h1 {
+    font-size: clamp(1.9rem, 5vw, 2.8rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+  header h1 .dot { color: var(--rattle); }
+  header p { color: var(--felt-soft); font-size: 0.95rem; margin-top: 4px; }
+
+  .stage-wrap { position: relative; width: min(680px, 94vw); }
+  canvas#stage {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    background: var(--paper);
+    border-radius: 22px;
+    box-shadow: 0 10px 30px var(--shadow);
+  }
+  .bubble {
+    position: absolute;
+    left: 50%;
+    bottom: 14px;
+    transform: translateX(-50%);
+    max-width: 88%;
+    background: var(--paper);
+    border: 2.5px solid var(--felt);
+    border-radius: 18px;
+    padding: 12px 18px;
+    font-size: clamp(0.95rem, 2.6vw, 1.2rem);
+    font-weight: 650;
+    line-height: 1.45;
+    box-shadow: 0 6px 18px var(--shadow);
+    opacity: 0;
+    transition: opacity 0.35s ease, transform 0.35s ease;
+    pointer-events: none;
+  }
+  .bubble::after {
+    content: "";
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    width: 12px; height: 12px;
+    background: var(--paper);
+    border-left: 2.5px solid var(--felt);
+    border-top: 2.5px solid var(--felt);
+    transform: translateX(-50%) rotate(45deg);
+  }
+  .bubble.show { opacity: 1; transform: translateX(-50%) translateY(-4px); }
+  .bubble .dead-word { color: var(--dead); }
+  .bubble .inv-word { color: var(--crayon); }
+
+  .crib {
+    width: min(680px, 94vw);
+    margin-top: 16px;
+    background: var(--paper);
+    border-radius: 18px;
+    box-shadow: 0 8px 24px var(--shadow);
+    padding: 14px 16px 10px;
+  }
+  .crib h2 {
+    font-size: 0.78rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--felt-soft);
+    margin-bottom: 8px;
+  }
+  .crib h2 .legend { float: right; letter-spacing: 0; text-transform: none; font-weight: 500; }
+  .crib h2 .legend i { font-style: normal; }
+  .crib h2 .legend .cmd { color: var(--crayon); }
+  .crib h2 .legend .felt-line { color: var(--rattle); }
+  .slot-row {
+    display: grid;
+    grid-template-columns: 3.4em 128px 1fr auto;
+    gap: 12px;
+    align-items: center;
+    padding: 7px 0;
+    border-top: 1px solid var(--playmat-deep);
+    font-size: 0.85rem;
+  }
+  .slot-row:first-of-type { border-top: none; }
+  .slot-row.active { background: linear-gradient(90deg, rgba(232, 98, 61, 0.07), transparent); }
+  .slot-name { font-weight: 700; }
+  .slot-wave { width: 128px; height: 34px; border-radius: 6px; background: var(--playmat); }
+  .meters { display: flex; gap: 6px; flex-wrap: wrap; }
+  .meter {
+    --fill: 0%;
+    position: relative;
+    width: clamp(44px, 9vw, 72px);
+    height: 16px;
+    border-radius: 8px;
+    background: var(--playmat);
+    overflow: hidden;
+  }
+  .meter i {
+    position: absolute; inset: 0;
+    width: var(--fill);
+    background: var(--rattle-soft);
+    transition: width 0.25s ease;
+  }
+  .meter.winner i { background: var(--rattle); }
+  .meter span {
+    position: relative;
+    display: block;
+    text-align: center;
+    font-size: 0.62rem;
+    line-height: 16px;
+    color: var(--felt);
+  }
+  .verdict { min-width: 9em; text-align: right; font-weight: 650; color: var(--felt-soft); }
+  .verdict.live { color: var(--rattle); }
+  .verdict.dead { color: var(--dead); }
+  .verdict.inv { color: var(--crayon); }
+
+  .controls { display: flex; gap: 12px; margin-top: 16px; align-items: center; }
+  button#newBody {
+    font: inherit;
+    font-weight: 750;
+    font-size: 1.02rem;
+    color: var(--paper);
+    background: var(--felt);
+    border: none;
+    border-radius: 999px;
+    padding: 12px 26px;
+    cursor: pointer;
+    box-shadow: 0 6px 16px var(--shadow);
+  }
+  button#newBody:hover { background: #1f3532; }
+  button#newBody:focus-visible { outline: 3px solid var(--crayon); outline-offset: 3px; }
+  .status { color: var(--felt-soft); font-size: 0.85rem; }
+
+  footer {
+    margin-top: 18px;
+    max-width: min(680px, 94vw);
+    text-align: center;
+    color: var(--felt-soft);
+    font-size: 0.78rem;
+    line-height: 1.6;
+  }
+  footer a { color: var(--felt); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bubble { transition: none; }
+    .meter i { transition: none; }
+  }
+</style>
+</head>
+<body>
+  <header>
+    <h1 class="rounded">babble bot<span class="dot">.</span></h1>
+    <p>born seconds ago. the rest, it figures out.</p>
+  </header>
+
+  <div class="stage-wrap">
+    <canvas id="stage" width="960" height="720" role="img" aria-label="A small robot arm wiggling on a playmat, learning its own body"></canvas>
+    <div class="bubble rounded" id="bubble" aria-live="polite"></div>
+  </div>
+
+  <section class="crib" aria-label="Crib chart: evidence per motor slot">
+    <h2 class="mono">crib chart
+      <span class="legend"><i class="cmd">— what i tried</i> &nbsp; <i class="felt-line">— what i felt</i></span>
+    </h2>
+    <div id="rows"></div>
+  </section>
+
+  <div class="controls">
+    <button id="newBody" class="rounded">new body</button>
+    <span class="status mono" id="status"></span>
+  </div>
+
+  <footer>
+    every body here is random: joint count, wiring, flipped axes, and the occasional
+    motor connected to nothing. the bot compares what it <em>commanded</em> with what it
+    <em>felt</em> (efference copy) and works the rest out itself.<br />
+    after a real experiment: command-correlated attribution recovered 10/10 random
+    robot bodies, dead motors and all &middot; legolm embodied-sim, aug 2026.
+  </footer>
+
+<script>
+(() => {
+  "use strict";
+  const TAU = Math.PI * 2;
+  const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const stage = document.getElementById("stage");
+  const ctx = stage.getContext("2d");
+  const bubble = document.getElementById("bubble");
+  const rowsEl = document.getElementById("rows");
+  const statusEl = document.getElementById("status");
+
+  const COL = {
+    felt: "#2e4643", feltSoft: "#5a7370", rattle: "#e8623d", rattleSoft: "#f0906f",
+    crayon: "#3f6bd6", dead: "#9aa8a4", paper: "#f2f5f1", mat: "#dce8e4",
+  };
+
+  // ---------- random body ----------
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+  function makeBody() {
+    const nJoints = pick([1, 2, 2, 3, 3, 4]);
+    const joints = [];
+    for (let j = 0; j < nJoints; j++) {
+      joints.push({
+        len: rnd(0.55, 1.0) * (j === 0 ? 1.15 : 1.0),
+        sign: Math.random() < 0.3 ? -1 : 1,
+        inertia: rnd(0.8, 1.4),
+        q: rnd(-0.5, 0.5),
+        w: 0,
+        acc: 0,
+      });
+    }
+    // slots: one per joint, shuffled, plus maybe one dead slot spliced in
+    const wiring = joints.map((_, j) => j);
+    for (let i = wiring.length - 1; i > 0; i--) {
+      const k = Math.floor(Math.random() * (i + 1));
+      [wiring[i], wiring[k]] = [wiring[k], wiring[i]];
+    }
+    if (Math.random() < 0.65) wiring.splice(Math.floor(Math.random() * (wiring.length + 1)), 0, -1);
+    return { joints, wiring, nSlots: wiring.length };
+  }
+
+  // ---------- physics (top-down playmat: no gravity, damped rotors + neighbor whip) ----------
+  const DT = 1 / 60;
+  function step(body, torques) {
+    const J = body.joints;
+    for (let j = 0; j < J.length; j++) {
+      let tau = torques[j] || 0;
+      // reaction whip: driving a joint back-drives its neighbors a little
+      if (j > 0) tau += -0.22 * (torques[j - 1] || 0);
+      if (j < J.length - 1) tau += -0.22 * (torques[j + 1] || 0);
+      const b = J[j];
+      b.acc = (tau - 2.6 * b.w - 1.1 * b.q) / b.inertia; // spring keeps it on the mat
+      b.w += b.acc * DT;
+      b.q += b.w * DT;
+    }
+  }
+  const sensed = (body) => body.joints.map((b) => b.acc + (Math.random() - 0.5) * 0.5);
+
+  // ---------- correlation ----------
+  function pearson(xs, ys) {
+    const n = Math.min(xs.length, ys.length);
+    if (n < 8) return 0;
+    let sx = 0, sy = 0;
+    for (let i = 0; i < n; i++) { sx += xs[i]; sy += ys[i]; }
+    const mx = sx / n, my = sy / n;
+    let num = 0, dx = 0, dy = 0;
+    for (let i = 0; i < n; i++) {
+      const a = xs[i] - mx, b = ys[i] - my;
+      num += a * b; dx += a * a; dy += b * b;
+    }
+    const den = Math.sqrt(dx * dy);
+    return den > 1e-9 ? num / den : 0;
+  }
+  function shuffled(xs) {
+    const c = xs.slice();
+    for (let i = c.length - 1; i > 0; i--) {
+      const k = Math.floor(Math.random() * (i + 1));
+      [c[i], c[k]] = [c[k], c[i]];
+    }
+    return c;
+  }
+
+  // ---------- experiment state machine ----------
+  const BURSTS = 3, BURST_FRAMES = 90, LIVE_FLOOR = 0.32, NULL_MARGIN = 2.5;
+  let body, phase, phaseT, slotIdx, burstIdx, burst, evidence, schema, rows, eye;
+
+  function newBody() {
+    body = makeBody();
+    phase = "born"; phaseT = 0; slotIdx = 0; burstIdx = 0; schema = null;
+    evidence = Array.from({ length: body.nSlots }, () => ({
+      r: Array(body.joints.length).fill(0),
+      signs: Array(body.joints.length).fill(0),
+      nullLevel: 0, done: false,
+    }));
+    eye = { blink: 0, nextBlink: rnd(2, 5) };
+    bubble.classList.remove("show");
+    buildRows();
+    setStatus("waking up…");
+  }
+
+  function startBurst() {
+    burst = {
+      f: rnd(0.6, 1.6), phi: rnd(0, TAU), amp: rnd(1.8, 2.6),
+      t: 0, u: [], resp: body.joints.map(() => []),
+    };
+  }
+
+  function speechFor(schema) {
+    const n = schema.nJoints;
+    const parts = [`i have ${["zero","one","two","three","four"][n]} joint${n === 1 ? "" : "s"}.`];
+    schema.slots.forEach((s, i) => {
+      if (s.joint < 0) parts.push(`slot ${i} is <span class="dead-word">dead</span>.`);
+      else parts.push(`slot ${i} moves joint ${s.joint} ${s.sign < 0 ? '<span class="inv-word">inverted</span>' : "normal"}.`);
+    });
+    return parts.join(" ");
+  }
+
+  function concludeExperiment() {
+    const slots = evidence.map((ev) => {
+      let best = -1, bestR = 0;
+      ev.r.forEach((r, j) => { if (r > bestR) { bestR = r; best = j; } });
+      const live = bestR > Math.max(LIVE_FLOOR, ev.nullLevel * NULL_MARGIN);
+      return live ? { joint: best, sign: ev.signs[best] >= 0 ? 1 : -1, r: bestR } : { joint: -1, r: bestR };
+    });
+    const seen = new Set(slots.filter((s) => s.joint >= 0).map((s) => s.joint));
+    schema = { slots, nJoints: seen.size };
+    // truth check, for the status line only — the bot itself never peeks
+    const truth = body.wiring;
+    const right = slots.every((s, i) =>
+      (truth[i] === -1 && s.joint === -1) ||
+      (truth[i] === s.joint && body.joints[truth[i]].sign === s.sign));
+    setStatus(right ? "schema verified against hidden truth ✓" : "…close, but it fooled itself somewhere");
+  }
+
+  // ---------- crib chart DOM ----------
+  function buildRows() {
+    rowsEl.innerHTML = "";
+    rows = evidence.map((_, i) => {
+      const row = document.createElement("div");
+      row.className = "slot-row mono";
+      const name = document.createElement("span");
+      name.className = "slot-name"; name.textContent = `slot ${i}`;
+      const wave = document.createElement("canvas");
+      wave.className = "slot-wave"; wave.width = 256; wave.height = 68;
+      const meters = document.createElement("div");
+      meters.className = "meters";
+      const meterEls = body.joints.map((_, j) => {
+        const m = document.createElement("div");
+        m.className = "meter";
+        m.innerHTML = `<i></i><span>j${j}</span>`;
+        meters.appendChild(m);
+        return m;
+      });
+      const verdict = document.createElement("span");
+      verdict.className = "verdict"; verdict.textContent = "…";
+      row.append(name, wave, meters, verdict);
+      rowsEl.appendChild(row);
+      return { row, wave: wave.getContext("2d"), meterEls, verdict };
+    });
+  }
+
+  function drawWave(i) {
+    const g = rows[i].wave, w = 256, h = 68;
+    g.clearRect(0, 0, w, h);
+    const ev = evidence[i];
+    let bestJ = 0; ev.r.forEach((r, j) => { if (r > ev.r[bestJ]) bestJ = j; });
+    const plot = (arr, color, scale) => {
+      if (arr.length < 2) return;
+      g.strokeStyle = color; g.lineWidth = 2.5; g.beginPath();
+      arr.forEach((v, k) => {
+        const x = (k / (BURST_FRAMES - 1)) * w;
+        const y = h / 2 - Math.max(-1, Math.min(1, v * scale)) * (h / 2 - 6);
+        k ? g.lineTo(x, y) : g.moveTo(x, y);
+      });
+      g.stroke();
+    };
+    plot(burst.u, COL.crayon, 0.34);
+    plot(burst.resp[bestJ], COL.rattleSoft, 0.16);
+  }
+
+  function updateMeters(i) {
+    const ev = evidence[i];
+    let bestJ = 0; ev.r.forEach((r, j) => { if (r > ev.r[bestJ]) bestJ = j; });
+    rows[i].meterEls.forEach((m, j) => {
+      m.style.setProperty("--fill", `${Math.round(ev.r[j] * 100)}%`);
+      m.classList.toggle("winner", j === bestJ && ev.r[j] > LIVE_FLOOR);
+    });
+  }
+
+  function settleVerdict(i) {
+    const s = schemaSlot(i);
+    const v = rows[i].verdict;
+    if (s.joint < 0) { v.textContent = "· dead"; v.className = "verdict dead"; }
+    else if (s.sign < 0) { v.textContent = `→ j${s.joint} · inverted`; v.className = "verdict inv"; }
+    else { v.textContent = `→ j${s.joint} · normal`; v.className = "verdict live"; }
+  }
+  function schemaSlot(i) {
+    const ev = evidence[i];
+    let best = -1, bestR = 0;
+    ev.r.forEach((r, j) => { if (r > bestR) { bestR = r; best = j; } });
+    const live = bestR > Math.max(LIVE_FLOOR, ev.nullLevel * NULL_MARGIN);
+    return live ? { joint: best, sign: ev.signs[best] >= 0 ? 1 : -1 } : { joint: -1 };
+  }
+
+  const setStatus = (t) => { statusEl.textContent = t; };
+
+  // ---------- main loop ----------
+  let waveT = 0;
+  function tick() {
+    phaseT += DT;
+    const torques = Array(body.joints.length).fill(0);
+
+    if (phase === "born") {
+      step(body, torques);
+      if (phaseT > 0.9) { phase = "babble"; phaseT = 0; startBurst(); setStatus("babbling: slot 0…"); }
+    } else if (phase === "babble") {
+      rows.forEach((r, i) => r.row.classList.toggle("active", i === slotIdx));
+      const u = burst.amp * Math.sin(TAU * burst.f * burst.t + burst.phi);
+      burst.t += DT;
+      const target = body.wiring[slotIdx];
+      if (target >= 0) torques[target] = u * body.joints[target].sign;
+      step(body, torques);
+      burst.u.push(u);
+      sensed(body).forEach((a, j) => burst.resp[j].push(a));
+      if (burst.u.length % 6 === 0) drawWave(slotIdx);
+
+      if (burst.u.length >= BURST_FRAMES) {
+        const ev = evidence[slotIdx];
+        body.joints.forEach((_, j) => {
+          const r = pearson(burst.u, burst.resp[j]);
+          ev.r[j] += Math.abs(r) / BURSTS;
+          ev.signs[j] += r;
+        });
+        ev.nullLevel += Math.abs(pearson(shuffled(burst.u), burst.resp[0])) / BURSTS;
+        updateMeters(slotIdx);
+        burstIdx++;
+        if (burstIdx >= BURSTS) {
+          ev.done = true;
+          settleVerdict(slotIdx);
+          burstIdx = 0; slotIdx++;
+          if (slotIdx >= body.nSlots) {
+            rows.forEach((r) => r.row.classList.remove("active"));
+            phase = "think"; phaseT = 0;
+            setStatus("thinking…");
+            bubble.innerHTML = "…"; bubble.classList.add("show");
+          } else {
+            setStatus(`babbling: slot ${slotIdx}…`);
+            startBurst();
+          }
+        } else startBurst();
+      }
+    } else if (phase === "think") {
+      step(body, torques);
+      if (phaseT > 0.8) {
+        concludeExperiment();
+        bubble.innerHTML = speechFor(schema);
+        phase = "speak"; phaseT = 0; waveT = 0;
+      }
+    } else if (phase === "speak") {
+      // a proud little wave with whatever joint it likes best
+      if (!reduceMotion && waveT < 1.6) {
+        waveT += DT;
+        const j = body.joints.length - 1;
+        torques[j] = 2.2 * Math.sin(TAU * 2.2 * waveT) * body.joints[j].sign;
+      }
+      step(body, torques);
+    }
+
+    draw();
+    requestAnimationFrame(tick);
+  }
+
+  // ---------- rendering ----------
+  function draw() {
+    const w = stage.width, h = stage.height;
+    ctx.clearRect(0, 0, w, h);
+    // playmat rug
+    ctx.fillStyle = COL.paper; ctx.fillRect(0, 0, w, h);
+    ctx.strokeStyle = COL.mat; ctx.lineWidth = 3;
+    for (let r = 90; r < 420; r += 80) {
+      ctx.beginPath(); ctx.arc(w / 2, h * 0.62, r, 0, TAU); ctx.stroke();
+    }
+    const base = { x: w / 2, y: h * 0.62 };
+    const S = 96; // px per unit length
+    // base disc
+    ctx.fillStyle = COL.felt;
+    ctx.beginPath(); ctx.arc(base.x, base.y, 20, 0, TAU); ctx.fill();
+
+    let x = base.x, y = base.y, ang = -Math.PI / 2;
+    let tip = { x, y }, prevTip = { x, y };
+    body.joints.forEach((b, j) => {
+      ang += b.q * b.sign;
+      const nx = x + Math.cos(ang) * b.len * S;
+      const ny = y + Math.sin(ang) * b.len * S;
+      ctx.strokeStyle = COL.rattle;
+      ctx.lineWidth = 26 - j * 4;
+      ctx.lineCap = "round";
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(nx, ny); ctx.stroke();
+      // joint pin
+      ctx.fillStyle = COL.paper;
+      ctx.beginPath(); ctx.arc(x, y, 7 - j, 0, TAU); ctx.fill();
+      prevTip = { x, y };
+      x = nx; y = ny; tip = { x, y };
+    });
+
+    // googly eye at the tip, gazing along the last link
+    eye.nextBlink -= DT;
+    if (eye.nextBlink <= 0) { eye.blink = 0.14; eye.nextBlink = rnd(2.5, 6); }
+    eye.blink = Math.max(0, eye.blink - DT);
+    const gaze = Math.atan2(tip.y - prevTip.y, tip.x - prevTip.x);
+    ctx.fillStyle = "#fff";
+    ctx.beginPath();
+    ctx.ellipse(tip.x, tip.y, 15, eye.blink > 0 ? 2.5 : 15, 0, 0, TAU);
+    ctx.fill();
+    ctx.strokeStyle = COL.felt; ctx.lineWidth = 2.5; ctx.stroke();
+    if (eye.blink <= 0) {
+      ctx.fillStyle = COL.felt;
+      ctx.beginPath();
+      ctx.arc(tip.x + Math.cos(gaze) * 5.5, tip.y + Math.sin(gaze) * 5.5, 6, 0, TAU);
+      ctx.fill();
+    }
+  }
+
+  document.getElementById("newBody").addEventListener("click", newBody);
+  newBody();
+  requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>

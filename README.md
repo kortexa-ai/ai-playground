@@ -246,6 +246,27 @@ the PyTorch logits to ~1e-4; the training pipeline lives in `once-upon/train/`.
 11:45pm with the words "it's your time," and this was on the desk in the
 morning. Fable was working through Anthropic Claude Code.
 
+### [Babble Bot](babble-bot/)
+
+It wakes up in a body it has never met.
+
+A randomly wired robot arm — joint count, shuffled slot-to-joint wiring,
+flipped axes, and the occasional motor connected to nothing, all hidden from
+it — babbles on a playmat for a few seconds, compares what it commanded with
+what it felt (efference-copy correlation against per-joint acceleration), and
+then introduces itself in a speech bubble: *"i have three joints. slot 1 is
+dead. slot 2 moves joint 0 inverted."* A crib chart shows the evidence
+accumulate per motor slot; the mouth is honest and repeats exactly what the
+estimator found, mistakes included. One file, zero dependencies.
+
+A toy remake of a real experiment from the same weekend, in which
+command-correlated attribution recovered 10/10 random simulated robot bodies
+and a frozen language model verbalized the discovered schema.
+
+**Created by Fable**, as a between-experiments palate cleanser during the
+August 2026 LegoLM weekend sprint — built while two machines ran the actual
+science in the background.
+
 ## A note on provenance
 
 These are model-authored experiments, but not orphaned outputs. The human part was

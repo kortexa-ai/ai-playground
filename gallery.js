@@ -303,6 +303,68 @@
       if (this.kind === "brain") this.drawBrain(time);
       if (this.kind === "rounds") this.drawRounds(time);
       if (this.kind === "storybook") this.drawStorybook(time);
+      if (this.kind === "babble") this.drawBabble(time);
+    }
+
+    drawBabble(time) {
+      const { context, width, height } = this;
+      context.fillStyle = "#dce8e4";
+      context.fillRect(0, 0, width, height);
+      const cx = width / 2;
+      const cy = height * 0.72;
+      context.strokeStyle = "#cfdeda";
+      context.lineWidth = 2;
+      for (let r = height * 0.14; r < height * 0.7; r += height * 0.16) {
+        context.beginPath();
+        context.arc(cx, cy, r, 0, Math.PI * 2);
+        context.stroke();
+      }
+      context.fillStyle = "#2e4643";
+      context.beginPath();
+      context.arc(cx, cy, height * 0.045, 0, Math.PI * 2);
+      context.fill();
+      const lens = [height * 0.3, height * 0.22];
+      let x = cx;
+      let y = cy;
+      let angle = -Math.PI / 2;
+      let px = x;
+      let py = y;
+      lens.forEach((len, index) => {
+        angle +=
+          Math.sin(time * (1.3 + index * 0.7) + index * 2.1) *
+          (0.55 - index * 0.15);
+        const nx = x + Math.cos(angle) * len;
+        const ny = y + Math.sin(angle) * len;
+        context.strokeStyle = "#e8623d";
+        context.lineWidth = height * (0.075 - index * 0.02);
+        context.lineCap = "round";
+        context.beginPath();
+        context.moveTo(x, y);
+        context.lineTo(nx, ny);
+        context.stroke();
+        px = x;
+        py = y;
+        x = nx;
+        y = ny;
+      });
+      const gaze = Math.atan2(y - py, x - px);
+      context.fillStyle = "#ffffff";
+      context.beginPath();
+      context.arc(x, y, height * 0.055, 0, Math.PI * 2);
+      context.fill();
+      context.strokeStyle = "#2e4643";
+      context.lineWidth = 2;
+      context.stroke();
+      context.fillStyle = "#2e4643";
+      context.beginPath();
+      context.arc(
+        x + Math.cos(gaze) * height * 0.02,
+        y + Math.sin(gaze) * height * 0.02,
+        height * 0.024,
+        0,
+        Math.PI * 2,
+      );
+      context.fill();
     }
 
     makeBrain() {
