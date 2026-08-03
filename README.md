@@ -267,6 +267,27 @@ and a frozen language model verbalized the discovered schema.
 August 2026 LegoLM weekend sprint — built while two machines ran the actual
 science in the background.
 
+### [Expert Aquarium](expert-aquarium/)
+
+Sparse thoughts, observed underwater.
+
+Words swim through a miniature mixture-of-experts model. Twelve visible reefs
+stand in for DeepSeek V4's 43 layers; each reef shows fourteen representative
+experts instead of 256, and three glow when the real model would route to six.
+Move the VRAM budget from 4 to 40 GiB and the aquarium changes its layer
+residency, LRU expert cache, cache-hit rate, current, and the little pauses while
+a cold specialist surfaces from storage.
+
+The three budget anchors come from real capped V4 runs. The fish are artistic
+license.
+
+```bash
+cd expert-aquarium
+python3 -m http.server 8765
+```
+
+Then open <http://localhost:8765>.
+
 ## A note on provenance
 
 These are model-authored experiments, but not orphaned outputs. The human part was

@@ -304,6 +304,89 @@
       if (this.kind === "rounds") this.drawRounds(time);
       if (this.kind === "storybook") this.drawStorybook(time);
       if (this.kind === "babble") this.drawBabble(time);
+      if (this.kind === "aquarium") this.drawAquarium(time);
+    }
+
+    drawAquarium(time) {
+      const { context, width, height } = this;
+      const water = context.createLinearGradient(0, 0, 0, height);
+      water.addColorStop(0, "#0b3442");
+      water.addColorStop(0.55, "#082431");
+      water.addColorStop(1, "#03131d");
+      context.fillStyle = water;
+      context.fillRect(0, 0, width, height);
+
+      const layers = 10;
+      const experts = 9;
+      context.save();
+      context.globalCompositeOperation = "lighter";
+      for (let layer = 0; layer < layers; layer += 1) {
+        const x = width * (0.09 + (layer / (layers - 1)) * 0.82);
+        context.strokeStyle = "rgba(125, 221, 225, 0.08)";
+        context.lineWidth = 1;
+        context.beginPath();
+        context.moveTo(x, height * 0.15);
+        context.lineTo(x, height * 0.84);
+        context.stroke();
+        for (let expert = 0; expert < experts; expert += 1) {
+          const y = height * (0.2 + (expert / (experts - 1)) * 0.58);
+          const routed = (expert + layer * 3) % experts === Math.floor((time * 0.7 + layer) % experts);
+          const cached = expert < 2 + (layer % 3);
+          if (cached) {
+            context.strokeStyle = "rgba(125, 221, 225, 0.42)";
+            context.beginPath();
+            context.arc(x, y, 6, 0, TAU);
+            context.stroke();
+          }
+          if (routed) {
+            const glow = context.createRadialGradient(x, y, 0, x, y, 22);
+            glow.addColorStop(0, "rgba(184, 239, 135, 0.65)");
+            glow.addColorStop(1, "rgba(184, 239, 135, 0)");
+            context.fillStyle = glow;
+            context.beginPath();
+            context.arc(x, y, 22, 0, TAU);
+            context.fill();
+          }
+          context.fillStyle = routed ? "rgba(198, 244, 153, 0.92)" : "rgba(116, 176, 164, 0.4)";
+          context.beginPath();
+          context.arc(x, y, routed ? 4.2 : 2.6, 0, TAU);
+          context.fill();
+        }
+      }
+
+      for (let token = 0; token < 7; token += 1) {
+        const progress = (time * (0.055 + token * 0.002) + token * 0.17) % 1;
+        const x = width * (0.035 + progress * 0.93);
+        const y = height * (0.32 + token * 0.057 + Math.sin(time * 1.2 + token) * 0.045);
+        const tail = width * 0.045;
+        const trail = context.createLinearGradient(x - tail, y, x, y);
+        trail.addColorStop(0, "rgba(255, 155, 114, 0)");
+        trail.addColorStop(1, "rgba(255, 174, 133, 0.82)");
+        context.strokeStyle = trail;
+        context.lineWidth = 1.8;
+        context.beginPath();
+        context.moveTo(x - tail, y);
+        context.lineTo(x, y);
+        context.stroke();
+        context.shadowColor = "rgba(255, 155, 114, 0.9)";
+        context.shadowBlur = 12;
+        context.fillStyle = "#ffb089";
+        context.beginPath();
+        context.ellipse(x, y, 4.5, 2.5, 0, 0, TAU);
+        context.fill();
+        context.shadowBlur = 0;
+      }
+      context.restore();
+
+      context.fillStyle = "rgba(22, 54, 54, 0.55)";
+      context.beginPath();
+      context.moveTo(0, height);
+      for (let x = 0; x <= width; x += 20) {
+        context.lineTo(x, height * (0.92 + randomAt(Math.round(x / 20), 99) * 0.04));
+      }
+      context.lineTo(width, height);
+      context.closePath();
+      context.fill();
     }
 
     drawBabble(time) {

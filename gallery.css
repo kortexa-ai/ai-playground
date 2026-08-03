@@ -300,6 +300,10 @@ button {
   background: #0e0b1d;
 }
 
+.aquarium-card .work-visual {
+  background: #061a24;
+}
+
 .feature-card {
   grid-column: 1 / -1;
   display: grid;

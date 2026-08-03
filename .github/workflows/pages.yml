@@ -33,7 +33,7 @@ jobs:
         run: |
           mkdir _site
           cp index.html gallery.css gallery.js _site/
-          cp -R signal-garden night-letters almanac one-more-you longitude-loom ascii-brain rounds once-upon _site/
+          cp -R signal-garden night-letters almanac one-more-you longitude-loom ascii-brain rounds once-upon babble-bot expert-aquarium _site/
           rm -rf _site/once-upon/train _site/once-upon/test
 
       - name: Upload the Pages artifact

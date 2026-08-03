@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Expert Aquarium — watch tokens route through a sparse mixture-of-experts model and see a VRAM budget change what stays warm."
+    />
+    <meta name="theme-color" content="#06141d" />
+    <title>Expert Aquarium — sparse thoughts, observed underwater</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23061a24'/%3E%3Ccircle cx='9' cy='18' r='3' fill='%23ff9b72'/%3E%3Ccircle cx='20' cy='9' r='2' fill='%23b8ef87'/%3E%3Ccircle cx='24' cy='22' r='2' fill='%237ddde1'/%3E%3Cpath d='M9 18Q15 6 20 9T24 22' fill='none' stroke='%237ddde1' opacity='.5'/%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="water-light" aria-hidden="true"></div>
+    <header class="site-header">
+      <a href="../" class="back-link">← AI PLAYGROUND</a>
+      <p>FIELD NOTE 10 · AUGUST 2026</p>
+    </header>
+
+    <main>
+      <header class="intro">
+        <p class="eyebrow">A SMALL MODEL OF A VERY LARGE MODEL</p>
+        <h1>Expert<br /><em>Aquarium</em></h1>
+        <p class="lede">
+          Each word is a visitor. At every reef, the router wakes only a few
+          experts. Give the aquarium more memory and familiar specialists stay
+          warm; take it away and they rise from the deep on demand.
+        </p>
+      </header>
+
+      <section class="aquarium" aria-labelledby="tank-title">
+        <div class="tank-heading">
+          <div>
+            <p class="eyebrow">LIVE ROUTING STUDY</p>
+            <h2 id="tank-title">Twelve visible reefs stand in for forty-three layers.</h2>
+          </div>
+          <div class="legend" aria-label="Legend">
+            <span><i class="legend-token"></i> token</span>
+            <span><i class="legend-hot"></i> routed expert</span>
+            <span><i class="legend-cache"></i> cached expert</span>
+          </div>
+        </div>
+
+        <div class="tank-wrap">
+          <canvas
+            id="tank"
+            width="1400"
+            height="760"
+            role="img"
+            aria-label="Words swimming from left to right through twelve model layers. At each layer, only three representative experts light up. Cached experts have a bright outer ring."
+          ></canvas>
+          <div class="depth-labels" aria-hidden="true">
+            <span>INPUT CURRENT</span>
+            <span>ROUTED EXPERT REEFS</span>
+            <span>NEXT TOKEN</span>
+          </div>
+        </div>
+
+        <div class="telemetry" aria-live="polite">
+          <div>
+            <span>MEMORY POLICY</span>
+            <strong id="policy">streaming</strong>
+          </div>
+          <div>
+            <span>EXPERT CACHE</span>
+            <strong><b id="cache-size">3</b> / layer</strong>
+          </div>
+          <div>
+            <span>CACHE HIT RATE</span>
+            <strong id="hit-rate">0%</strong>
+          </div>
+          <div>
+            <span>MODEL CURRENT</span>
+            <strong><b id="token-rate">0.62</b> tok/s</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="controls" aria-label="Aquarium controls">
+        <div class="prompt-control">
+          <label for="prompt">Whisper something into the water</label>
+          <div class="prompt-row">
+            <input
+              id="prompt"
+              type="text"
+              maxlength="100"
+              value="the moon remembers every borrowed tide"
+              autocomplete="off"
+              spellcheck="false"
+            />
+            <button id="release" type="button">release tokens</button>
+          </div>
+        </div>
+
+        <div class="budget-control">
+          <div class="budget-label">
+            <label for="budget">VRAM budget</label>
+            <output id="budget-output" for="budget">14 GiB</output>
+          </div>
+          <input id="budget" type="range" min="4" max="40" value="14" step="1" />
+          <div class="range-ends" aria-hidden="true">
+            <span>4 · fetch almost everything</span>
+            <span>40 · keep familiar experts warm</span>
+          </div>
+        </div>
+      </section>
+
+      <p id="observation" class="observation" aria-live="polite">
+        The first visitors know nobody. Every expert must surface from storage.
+      </p>
+    </main>
+
+    <footer>
+      <p>
+        A playful diagram, not a benchmark. Real DeepSeek V4 has 43 layers,
+        256 routed experts per layer, and wakes six for each token. This aquarium
+        shows fewer creatures so the human can still see the water.
+      </p>
+      <a href="https://github.com/kortexa-ai/ai-playground/tree/main/expert-aquarium">
+        inspect the plumbing ↗
+      </a>
+    </footer>
+
+    <script src="app.js"></script>
+  </body>
+</html>
