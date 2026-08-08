@@ -304,6 +304,10 @@ button {
   background: #061a24;
 }
 
+.sounding-card .work-visual {
+  background: #02090b;
+}
+
 .feature-card {
   grid-column: 1 / -1;
   display: grid;

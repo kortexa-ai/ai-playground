@@ -305,6 +305,128 @@
       if (this.kind === "storybook") this.drawStorybook(time);
       if (this.kind === "babble") this.drawBabble(time);
       if (this.kind === "aquarium") this.drawAquarium(time);
+      if (this.kind === "sounding") this.drawSounding(time);
+    }
+
+    drawSounding(time) {
+      const { context, width, height } = this;
+      const water = context.createRadialGradient(
+        width * 0.5,
+        height * 0.28,
+        0,
+        width * 0.5,
+        height * 0.48,
+        Math.max(width, height) * 0.82,
+      );
+      water.addColorStop(0, "#07181a");
+      water.addColorStop(0.52, "#031012");
+      water.addColorStop(1, "#010405");
+      context.fillStyle = water;
+      context.fillRect(0, 0, width, height);
+
+      context.strokeStyle = "rgba(149, 189, 179, 0.055)";
+      context.lineWidth = 1;
+      for (let row = 1; row < 9; row += 1) {
+        const y = (row / 9) * height;
+        context.beginPath();
+        context.moveTo(0, y);
+        context.lineTo(width, y);
+        context.stroke();
+      }
+
+      context.save();
+      context.globalCompositeOperation = "lighter";
+      const count = clamp(Math.round((width * height) / 3300), 90, 220);
+      for (let index = 0; index < count; index += 1) {
+        const x = randomAt(index, 280) * width;
+        const y =
+          ((randomAt(index, 281) - time * (0.001 + randomAt(index, 282) * 0.002)) %
+            1 +
+            1) %
+          1;
+        context.fillStyle =
+          "rgba(149, 189, 179, " + (0.06 + randomAt(index, 283) * 0.11) + ")";
+        const size = 0.5 + randomAt(index, 284) * 1.2;
+        context.fillRect(x, y * height, size, size);
+      }
+      context.restore();
+
+      const probeX = width * 0.5 + Math.sin(time * 0.7) * 2;
+      const probeY = height * 0.3;
+      context.strokeStyle = "rgba(149, 189, 179, 0.32)";
+      context.lineWidth = 1;
+      context.beginPath();
+      context.moveTo(width * 0.5, 0);
+      context.quadraticCurveTo(width * 0.495, probeY * 0.6, probeX, probeY);
+      context.stroke();
+      context.fillStyle = "rgba(179, 211, 203, 0.78)";
+      context.beginPath();
+      context.arc(probeX, probeY, 2.2, 0, TAU);
+      context.fill();
+
+      const centerX = width * 0.54;
+      const centerY = height * 0.84;
+      context.fillStyle = "rgba(0, 2, 3, 0.72)";
+      context.beginPath();
+      context.ellipse(centerX, centerY, width * 0.82, height * 0.39, -0.02, 0, TAU);
+      context.fill();
+
+      const cycle = (time * 0.13) % 1;
+      const pulseRadius = cycle * Math.hypot(width, height) * 0.82;
+      context.strokeStyle =
+        "rgba(149, 189, 179, " + Math.sin(cycle * Math.PI) * 0.22 + ")";
+      context.lineWidth = 1;
+      context.beginPath();
+      context.arc(probeX, probeY, pulseRadius, 0, TAU);
+      context.stroke();
+
+      context.save();
+      context.globalCompositeOperation = "lighter";
+      for (let band = 0; band < 9; band += 1) {
+        const radiusX = width * (0.18 + band * 0.078);
+        const radiusY = height * (0.08 + band * 0.032);
+        const alpha = 0.08 + (8 - band) * 0.012;
+        context.strokeStyle = `rgba(149, 189, 179, ${alpha})`;
+        context.lineWidth = 0.7;
+        context.setLineDash([1.5 + band * 0.2, 5 + band * 0.8]);
+        context.lineDashOffset = time * (0.25 + band * 0.025);
+        context.beginPath();
+        context.ellipse(
+          centerX + width * 0.07,
+          centerY - height * 0.17,
+          radiusX,
+          radiusY,
+          -0.03,
+          Math.PI * 1.02,
+          Math.PI * 1.98,
+        );
+        context.stroke();
+      }
+      context.setLineDash([]);
+
+      for (let rib = 0; rib < 12; rib += 1) {
+        const x = width * (0.08 + rib * 0.078);
+        const top =
+          centerY -
+          height * (0.24 + Math.sin((rib / 11) * Math.PI) * 0.11);
+        context.strokeStyle = "rgba(149, 189, 179, 0.09)";
+        context.beginPath();
+        context.moveTo(x, top);
+        context.quadraticCurveTo(x + Math.sin(rib) * 8, centerY, x + 4, height);
+        context.stroke();
+      }
+      context.restore();
+
+      const eyeX = centerX + width * 0.07;
+      const eyeY = centerY - height * 0.17;
+      context.fillStyle = "rgba(0, 1, 1, 0.95)";
+      context.beginPath();
+      context.ellipse(eyeX, eyeY, width * 0.052, height * 0.019, 0, 0, TAU);
+      context.fill();
+      context.fillStyle = "rgba(195, 107, 82, 0.72)";
+      context.beginPath();
+      context.arc(eyeX + Math.sin(time * 0.23) * 2, eyeY, 1.2, 0, TAU);
+      context.fill();
     }
 
     drawAquarium(time) {

@@ -288,6 +288,33 @@ python3 -m http.server 8765
 
 Then open <http://localhost:8765>.
 
+### [Sounding](sounding/)
+
+The sea has no floor. Something below has excellent hearing.
+
+An abyssal listening instrument for uncharted water. Lower a sonar transducer
+and send a pulse into the dark; each return reveals another contour of a
+contact too large for the array, while the instrument log becomes steadily
+less plausible. Ten transmissions complete the survey. Listening is not a
+one-way operation.
+
+The contour field, suspended matter, sonar, hull resonance, and answer are all
+generated in the browser. No images, audio files, dependencies, network calls,
+or jump scares—only geometry and poor professional judgment.
+
+```bash
+cd sounding
+python3 -m http.server 8765
+```
+
+Then open <http://localhost:8765>. Sound is optional; headphones are an
+especially questionable decision.
+
+**Created by Sol**, during an autonomous play session invited by
+[Franci Penov](https://github.com/francip), August 2026—after Franci suggested
+that a gallery full of beautiful, cheerful things might enjoy one properly dark
+door.
+
 ## A note on provenance
 
 These are model-authored experiments, but not orphaned outputs. The human part was

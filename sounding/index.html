@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Sounding — an abyssal listening instrument for a sea without a floor."
+    />
+    <meta name="theme-color" content="#020608" />
+    <meta property="og:title" content="Sounding" />
+    <meta
+      property="og:description"
+      content="The sea has no floor. Something below has excellent hearing."
+    />
+    <title>Sounding — the sea has excellent hearing</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23020608'/%3E%3Ccircle cx='16' cy='16' r='3' fill='none' stroke='%2395bdb3'/%3E%3Ccircle cx='16' cy='16' r='8' fill='none' stroke='%2395bdb3' opacity='.55'/%3E%3Ccircle cx='16' cy='16' r='13' fill='none' stroke='%23985442' opacity='.7'/%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <canvas
+      id="abyss"
+      role="img"
+      aria-label="A sonar view of a transducer descending through dark water. Each pulse gradually reveals the contours of an enormous contact below."
+    ></canvas>
+    <div class="grain" aria-hidden="true"></div>
+    <div class="edge-shade" aria-hidden="true"></div>
+
+    <header class="topbar">
+      <a class="back" href="../" aria-label="Return to AI Playground">
+        <span aria-hidden="true">←</span> PLAYGROUND
+      </a>
+      <p class="wordmark" aria-label="Sounding">SOUNDING</p>
+      <button class="sound-toggle" id="sound-toggle" type="button" disabled>
+        SOUND&nbsp;—
+      </button>
+    </header>
+
+    <main>
+      <section class="threshold" id="threshold" aria-labelledby="title">
+        <div class="threshold-rule" aria-hidden="true"></div>
+        <p class="kicker">ABYSSAL RECEIVER · UNCHARTED WATER</p>
+        <h1 id="title">SOUNDING</h1>
+        <p class="premise">
+          A listening instrument<br />for a sea without a floor.
+        </p>
+        <button class="open-channel" id="open-channel" type="button">
+          <span>OPEN CHANNEL</span>
+          <i aria-hidden="true"></i>
+        </button>
+        <p class="threshold-note">
+          Generative low audio begins after this button.<br />Headphones optional.
+          Curiosity also optional.
+        </p>
+      </section>
+
+      <section class="instrument" id="instrument" aria-hidden="true">
+        <aside class="survey-panel" aria-label="Survey status">
+          <p class="micro-label">SURVEY</p>
+          <p class="survey-code" id="survey-code">N-0000</p>
+          <dl>
+            <div>
+              <dt>ARRAY</dt>
+              <dd>4 × 11 KHZ</dd>
+            </div>
+            <div>
+              <dt>WINCH</dt>
+              <dd id="winch-value">LOCKED</dd>
+            </div>
+            <div>
+              <dt>CONTACT</dt>
+              <dd id="contact-value">NONE</dd>
+            </div>
+          </dl>
+        </aside>
+
+        <section class="depth-panel" aria-label="Current depth">
+          <p class="micro-label">TRANSDUCER DEPTH</p>
+          <div class="depth-line">
+            <span id="depth-value">0000</span><small>M</small>
+          </div>
+          <p class="pulse-count">PULSE <span id="pulse-value">00</span> / 10</p>
+        </section>
+
+        <div class="bearing" aria-hidden="true">
+          <span></span>
+          <i></i>
+          <span></span>
+        </div>
+
+        <section class="log-panel" aria-labelledby="log-title">
+          <div class="log-heading">
+            <p class="micro-label" id="log-title">INSTRUMENT LOG</p>
+            <p class="mode"><i></i><span id="mode-value">PASSIVE</span></p>
+          </div>
+          <ol id="reading-log"></ol>
+        </section>
+
+        <div class="controls">
+          <p id="instruction">Lower the transducer. Send one pulse.</p>
+          <button class="pulse-button" id="pulse-button" type="button">
+            <span>DESCEND + TRANSMIT</span>
+            <kbd>SPACE</kbd>
+          </button>
+          <button class="restart-button" id="restart-button" type="button" hidden>
+            <span>NEW SOUNDING</span>
+            <kbd>R</kbd>
+          </button>
+        </div>
+
+        <section class="answer" id="answer" aria-hidden="true">
+          <p>UNCOMMANDED TRANSMISSION</p>
+          <h2>IT KNOWS WHICH SIDE<br />OF THE WATER YOU ARE ON.</h2>
+        </section>
+      </section>
+    </main>
+
+    <p class="sr-only" id="live-region" aria-live="polite"></p>
+    <noscript>
+      <p class="noscript">Sounding needs JavaScript to lower the instrument.</p>
+    </noscript>
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
