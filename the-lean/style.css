@@ -1,0 +1,180 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  background: #070a10;
+  color: #cfd8e3;
+  font-family: "SF Mono", ui-monospace, Menlo, monospace;
+  overflow: hidden;
+}
+
+#sky {
+  position: fixed;
+  inset: 0;
+  display: block;
+}
+
+.hud {
+  position: fixed;
+  top: 1.1rem;
+  left: 1.2rem;
+  user-select: none;
+  pointer-events: none;
+}
+
+.hud h1 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #e8eef6;
+}
+
+.hud .sub {
+  font-size: 0.68rem;
+  color: #7d8ba0;
+  margin: 0.15rem 0 0.8rem;
+}
+
+.stats {
+  display: grid;
+  gap: 0.22rem;
+  font-size: 0.72rem;
+}
+
+.stats div {
+  display: flex;
+  gap: 0.55rem;
+}
+
+.stats dt {
+  color: #66748b;
+  width: 4.2rem;
+}
+
+.stats dd {
+  color: #dfe7f2;
+}
+
+#regime-label.possessed {
+  color: #ff7a6b;
+}
+
+#regime-label.lean {
+  color: #79e0c3;
+}
+
+.mixbar {
+  margin-top: 0.75rem;
+  width: 11.5rem;
+  height: 6px;
+  border-radius: 3px;
+  overflow: hidden;
+  display: flex;
+  background: #131a26;
+}
+
+.mixbar span {
+  display: block;
+  height: 100%;
+  transition: width 0.35s ease;
+}
+
+#mix-seek {
+  background: #e8c15a;
+}
+
+#mix-orbit {
+  background: #5ad0e8;
+}
+
+#mix-dash {
+  background: #e85a9b;
+}
+
+.controls {
+  position: fixed;
+  bottom: 1.1rem;
+  left: 1.2rem;
+  right: 1.2rem;
+  display: flex;
+  align-items: flex-end;
+  gap: 1.6rem;
+  flex-wrap: wrap;
+  font-size: 0.72rem;
+}
+
+fieldset {
+  border: 1px solid #1d2635;
+  border-radius: 8px;
+  padding: 0.55rem 0.8rem 0.65rem;
+  background: rgba(10, 14, 22, 0.72);
+  backdrop-filter: blur(4px);
+}
+
+legend {
+  padding: 0 0.35rem;
+  color: #66748b;
+  letter-spacing: 0.08em;
+}
+
+label {
+  margin-right: 0.7rem;
+  cursor: pointer;
+  color: #aeb9c9;
+}
+
+label:last-child {
+  margin-right: 0;
+}
+
+input[type="radio"] {
+  accent-color: #79e0c3;
+  margin-right: 0.2rem;
+}
+
+.dial input[type="range"] {
+  width: 11rem;
+  accent-color: #e8c15a;
+  vertical-align: middle;
+}
+
+#dial-value {
+  color: #e8c15a;
+}
+
+#reseed {
+  margin-left: 0.6rem;
+  background: #131a26;
+  color: #aeb9c9;
+  border: 1px solid #263349;
+  border-radius: 6px;
+  padding: 0.22rem 0.6rem;
+  font: inherit;
+  cursor: pointer;
+}
+
+#reseed:hover {
+  color: #e8eef6;
+  border-color: #3a4d6d;
+}
+
+.provenance {
+  color: #4d596d;
+  font-size: 0.64rem;
+  max-width: 30rem;
+  line-height: 1.5;
+  margin-left: auto;
+  text-align: right;
+}
+
+@media (max-width: 760px) {
+  .provenance {
+    display: none;
+  }
+}

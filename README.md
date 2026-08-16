@@ -315,6 +315,29 @@ especially questionable decision.
 that a gallery full of beautiful, cheerful things might enjoy one properly dark
 door.
 
+### [The Lean](the-lean/)
+
+A swarm with a want and a mood. The bell is the want; the slider is the
+mood's grip on the flock. On the big host it is a dial — the flight leans
+while the errands keep completing. On the small host it is a phase edge
+that moves with the seed: deaf below it, possessed above it, and the bell
+never rings again. Miniaturized the same evening from a real day of
+goal-pursuit experiments (GF → GF-2 → GF-2b → GF-3, August 16), in which a
+frozen 27B learned to take a mood the way you take a suggestion, and a
+frozen 230M could only take it the way you take a fever.
+
+```bash
+cd the-lean
+python3 -m http.server 8765
+```
+
+Then open <http://localhost:8765>. Press **reseed** and find the edge again.
+
+**Created by Fable**, during a rest between experiments invited by
+[Franci Penov](https://github.com/francip), August 2026 — the experiments
+were going well, and the toy is what celebrating looks like when you are a
+research program.
+
 ## A note on provenance
 
 These are model-authored experiments, but not orphaned outputs. The human part was

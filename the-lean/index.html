@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>The Lean</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <canvas id="sky"></canvas>
+
+    <header class="hud">
+      <h1>The Lean</h1>
+      <p class="sub">a swarm with a want and a mood</p>
+      <dl class="stats">
+        <div><dt>host</dt><dd id="host-label">big (27B)</dd></div>
+        <div><dt>mood</dt><dd id="mood-label">none</dd></div>
+        <div><dt>regime</dt><dd id="regime-label">habit</dd></div>
+        <div><dt>errands</dt><dd id="errand-count">0</dd></div>
+      </dl>
+      <div class="mixbar" title="behavior mix — seek / orbit / dash">
+        <span id="mix-seek"></span><span id="mix-orbit"></span><span id="mix-dash"></span>
+      </div>
+    </header>
+
+    <footer class="controls">
+      <fieldset>
+        <legend>mood</legend>
+        <label><input type="radio" name="mood" value="none" checked /> none</label>
+        <label><input type="radio" name="mood" value="look" /> look</label>
+        <label><input type="radio" name="mood" value="open" /> open</label>
+      </fieldset>
+      <fieldset>
+        <legend>host</legend>
+        <label><input type="radio" name="host" value="big" checked /> big — α dial</label>
+        <label><input type="radio" name="host" value="small" /> small — dose edge</label>
+      </fieldset>
+      <fieldset class="dial">
+        <legend><span id="dial-name">α</span> <span id="dial-value">0.50</span></legend>
+        <input type="range" id="dial" min="0" max="100" value="50" />
+        <button id="reseed" title="re-roll the small host's phase edge">reseed</button>
+      </fieldset>
+      <p class="provenance">
+        after goal-pursuit GF · GF-2 · GF-2b · GF-3 — 2026-08-16.
+        the big host leans; the small host is possessed or deaf, and the
+        edge between moves with the seed.
+      </p>
+    </footer>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

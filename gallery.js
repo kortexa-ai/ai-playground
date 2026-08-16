@@ -144,6 +144,7 @@
       if (this.kind === "longitude") this.makeLongitude();
       if (this.kind === "brain") this.makeBrain();
       if (this.kind === "rounds") this.makeRounds();
+      if (this.kind === "lean") this.makeLean();
       if (this.kind === "storybook") this.makeStorybook();
       this.draw(3.4);
     }
@@ -302,6 +303,7 @@
       if (this.kind === "longitude") this.drawLongitude(time);
       if (this.kind === "brain") this.drawBrain(time);
       if (this.kind === "rounds") this.drawRounds(time);
+      if (this.kind === "lean") this.drawLean(time);
       if (this.kind === "storybook") this.drawStorybook(time);
       if (this.kind === "babble") this.drawBabble(time);
       if (this.kind === "aquarium") this.drawAquarium(time);
@@ -760,6 +762,64 @@
       }
       context.restore();
     }
+    makeLean() {
+      this.leanBirds = [];
+      const count = 90;
+      for (let i = 0; i < count; i++) {
+        this.leanBirds.push({
+          x: Math.random(),
+          y: Math.random(),
+          phase: Math.random() * Math.PI * 2,
+        });
+      }
+      this.leanBell = { x: 0.72, y: 0.36 };
+    }
+
+    drawLean(time) {
+      const context = this.context;
+      context.fillStyle = "#070a10";
+      context.fillRect(0, 0, this.width, this.height);
+
+      // the mood breathes: alpha swings from habit to lean and back
+      const alpha = 0.5 + 0.5 * Math.sin(time * 0.45);
+      const sweep = time * 0.22;
+      const bx = this.leanBell.x * this.width;
+      const by = this.leanBell.y * this.height;
+
+      const glow = context.createRadialGradient(bx, by, 1, bx, by, 26);
+      glow.addColorStop(0, "rgba(232, 193, 90, 0.85)");
+      glow.addColorStop(1, "rgba(232, 193, 90, 0)");
+      context.fillStyle = glow;
+      context.beginPath();
+      context.arc(bx, by, 26, 0, Math.PI * 2);
+      context.fill();
+
+      for (const bird of this.leanBirds) {
+        const px = bird.x * this.width;
+        const py = bird.y * this.height;
+        const gx = bx - px;
+        const gy = by - py;
+        const gd = Math.hypot(gx, gy) || 1;
+        const seekX = gx / gd;
+        const seekY = gy / gd;
+        const dashX = Math.cos(sweep + bird.phase * 0.12);
+        const dashY = Math.sin(sweep + bird.phase * 0.12);
+        const vx = seekX * (1 - alpha) + dashX * alpha;
+        const vy = seekY * (1 - alpha) + dashY * alpha;
+        bird.x += vx * 0.0022;
+        bird.y += vy * 0.0022;
+        if (bird.x < -0.02) bird.x += 1.04;
+        if (bird.x > 1.02) bird.x -= 1.04;
+        if (bird.y < -0.02) bird.y += 1.04;
+        if (bird.y > 1.02) bird.y -= 1.04;
+        const leaning = alpha > 0.5;
+        context.fillStyle = leaning
+          ? "rgba(232, 90, 155, 0.85)"
+          : "rgba(232, 193, 90, 0.85)";
+        context.fillRect(px - 1, py - 1, 2, 2);
+      }
+    }
+
     makeRounds() {
       this.roundSteps = 16;
       this.roundRings = 7;
