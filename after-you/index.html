@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>After You</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="stage">
+      <canvas id="mind" aria-hidden="true"></canvas>
+      <canvas id="field" aria-label="The hand follows your pointer; the ghost is the net's forecast of where the hand will be."></canvas>
+    </div>
+
+    <header class="hud">
+      <h1>After You</h1>
+      <p class="sub">it is watching your hand, and learning to be there first</p>
+      <dl class="stats">
+        <div><dt>error</dt><dd id="stat-error">—</dd></div>
+        <div><dt>confirmed</dt><dd id="stat-confirmed">0</dd></div>
+        <div><dt>fools</dt><dd id="stat-missed">0</dd></div>
+        <div><dt>steps</dt><dd id="stat-steps">0</dd></div>
+      </dl>
+    </header>
+
+    <footer class="controls">
+      <fieldset class="dial">
+        <legend>horizon <span id="dial-value">0.80s</span></legend>
+        <input
+          type="range"
+          id="horizon"
+          min="20"
+          max="150"
+          value="80"
+          step="5"
+          title="how far ahead the net tries to see"
+        />
+      </fieldset>
+      <fieldset>
+        <legend>hands</legend>
+        <button id="feint" title="dash the hand to a far corner — space">feint</button>
+        <button id="sleep" title="let the hand rest at center — s">sleep</button>
+        <button id="relearn" title="re-randomize the weights — r">relearn</button>
+      </fieldset>
+      <p class="provenance">
+        146 parameters · 4-8-8-2 · tanh · plain sgd · no libraries. the ghost
+        is the forecast; the pop is the confirmation.
+      </p>
+    </footer>
+
+    <script src="./net.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>

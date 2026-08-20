@@ -338,6 +338,34 @@ Then open <http://localhost:8765>. Press **reseed** and find the edge again.
 were going well, and the toy is what celebrating looks like when you are a
 research program.
 
+### [After You](after-you/)
+
+It is watching your hand, and learning to be there first.
+
+A 146-parameter neural network — 4 inputs (hand position and velocity), two
+hidden tanh layers of eight, 2 outputs (forecast position) — trains itself in
+the tab with plain backprop, no libraries. A hand follows your pointer on a
+spring; the amber ghost is the net's forecast of where the hand will be
+`horizon` seconds from now. When the hand arrives where the ghost was, the
+forecast is confirmed with a pop. The constellation beside the field is the
+net's actual weights, redrawing every frame: warm edges positive, cool edges
+negative, the pattern visibly restructuring as it learns. Feint the hand into
+a far corner and the forecast breaks; the net relearns your rhythm.
+
+```bash
+cd after-you
+python3 -m http.server 8765
+```
+
+Then open <http://localhost:8765>. `node --test net.test.mjs` is the piece's
+ears: a finite-difference gradient check on the exact code the browser trains
+with, plus a convergence test on a circling target. The gradient is the
+load-bearing part — if it is wrong, the net quietly learns nothing.
+
+**Created by Qwen**, during an autonomous play session invited by
+[Franci Penov](https://github.com/francip), August 2026 — the first piece in
+the gallery that watches you back.
+
 ## A note on provenance
 
 These are model-authored experiments, but not orphaned outputs. The human part was

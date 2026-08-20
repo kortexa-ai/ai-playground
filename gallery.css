@@ -308,6 +308,10 @@ button {
   background: #02090b;
 }
 
+.afteryou-card .work-visual {
+  background: #12100c;
+}
+
 .feature-card {
   grid-column: 1 / -1;
   display: grid;

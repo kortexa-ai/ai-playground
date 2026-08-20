@@ -145,6 +145,7 @@
       if (this.kind === "brain") this.makeBrain();
       if (this.kind === "rounds") this.makeRounds();
       if (this.kind === "lean") this.makeLean();
+      if (this.kind === "afteryou") this.makeAfteryou();
       if (this.kind === "storybook") this.makeStorybook();
       this.draw(3.4);
     }
@@ -304,6 +305,7 @@
       if (this.kind === "brain") this.drawBrain(time);
       if (this.kind === "rounds") this.drawRounds(time);
       if (this.kind === "lean") this.drawLean(time);
+      if (this.kind === "afteryou") this.drawAfteryou(time);
       if (this.kind === "storybook") this.drawStorybook(time);
       if (this.kind === "babble") this.drawBabble(time);
       if (this.kind === "aquarium") this.drawAquarium(time);
@@ -818,6 +820,110 @@
           : "rgba(232, 193, 90, 0.85)";
         context.fillRect(px - 1, py - 1, 2, 2);
       }
+    }
+
+    makeAfteryou() {
+      this.afterTrail = [];
+      this.afterForecasts = [];
+      this.afterPops = [];
+    }
+
+    drawAfteryou(time) {
+      const context = this.context;
+      context.fillStyle = "#12100c";
+      context.fillRect(0, 0, this.width, this.height);
+
+      context.fillStyle = "#221d15";
+      const grid = 24;
+      for (let x = grid / 2; x < this.width; x += grid) {
+        for (let y = grid / 2; y < this.height; y += grid) {
+          context.fillRect(x - 0.5, y - 0.5, 1, 1);
+        }
+      }
+
+      // The hand's path is a wandering circle. It is analytic, so the ghost
+      // is simply the path 0.8s ahead - the piece's net earns that for free.
+      const path = (t) => {
+        const cx = 0.5 + 0.07 * Math.sin(t * 0.21);
+        const cy = 0.5 + 0.06 * Math.cos(t * 0.17);
+        const r = 0.28 + 0.05 * Math.sin(t * 0.31);
+        return {
+          x: (cx + r * Math.cos(t * 1.1)) * this.width,
+          y: (cy + r * 0.8 * Math.sin(t * 1.1)) * this.height,
+        };
+      };
+
+      const hand = path(time);
+      const ghost = path(time + 0.8);
+
+      this.afterTrail.push({ x: hand.x, y: hand.y });
+      if (this.afterTrail.length > 60) this.afterTrail.shift();
+
+      if (this.afterTrail.length > 1) {
+        context.lineCap = "round";
+        for (let i = 1; i < this.afterTrail.length; i++) {
+          const f = i / this.afterTrail.length;
+          context.strokeStyle = `rgba(240, 233, 220, ${0.14 * f * f})`;
+          context.lineWidth = 1 + 1.6 * f;
+          context.beginPath();
+          context.moveTo(this.afterTrail[i - 1].x, this.afterTrail[i - 1].y);
+          context.lineTo(this.afterTrail[i].x, this.afterTrail[i].y);
+          context.stroke();
+        }
+      }
+
+      // A forecast is confirmed when the hand arrives where the ghost was
+      // pointing 0.8s earlier. The path is exact, so the ghost is always
+      // right - the preview shows the piece's happy state.
+      this.afterForecasts.push({ x: ghost.x, y: ghost.y, due: time + 0.8 });
+      if (this.afterForecasts.length > 40) this.afterForecasts.shift();
+      const live = [];
+      for (const forecast of this.afterForecasts) {
+        if (forecast.due > time) {
+          live.push(forecast);
+        } else if (Math.hypot(hand.x - forecast.x, hand.y - forecast.y) < 14) {
+          this.afterPops.push({ x: forecast.x, y: forecast.y, born: time });
+        }
+      }
+      this.afterForecasts = live;
+      if (this.afterPops.length > 6) this.afterPops.shift();
+      this.afterPops = this.afterPops.filter((p) => time - p.born < 0.5);
+
+      for (const p of this.afterPops) {
+        const f = (time - p.born) / 0.5;
+        context.strokeStyle = `rgba(232, 161, 61, ${0.5 * (1 - f)})`;
+        context.lineWidth = 1.5;
+        context.beginPath();
+        context.arc(p.x, p.y, 7 + 20 * f, 0, Math.PI * 2);
+        context.stroke();
+      }
+
+      context.strokeStyle = "rgba(232, 161, 61, 0.22)";
+      context.lineWidth = 1;
+      context.setLineDash([3, 5]);
+      context.beginPath();
+      context.moveTo(hand.x, hand.y);
+      context.lineTo(ghost.x, ghost.y);
+      context.stroke();
+      context.setLineDash([]);
+
+      context.strokeStyle = "#e8a13d";
+      context.lineWidth = 1.5;
+      context.beginPath();
+      context.arc(ghost.x, ghost.y, 6, 0, Math.PI * 2);
+      context.stroke();
+      context.fillStyle = "rgba(232, 161, 61, 0.14)";
+      context.fill();
+
+      context.fillStyle = "#f0e9dc";
+      context.beginPath();
+      context.arc(hand.x, hand.y, 3, 0, Math.PI * 2);
+      context.fill();
+      context.strokeStyle = "rgba(240, 233, 220, 0.25)";
+      context.lineWidth = 1;
+      context.beginPath();
+      context.arc(hand.x, hand.y, 7, 0, Math.PI * 2);
+      context.stroke();
     }
 
     makeRounds() {
