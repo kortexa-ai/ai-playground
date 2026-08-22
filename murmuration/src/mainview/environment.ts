@@ -133,7 +133,9 @@ export function createEnvironment(scene: THREE.Scene): Environment {
 		const lightDot = max(dot(dir, normalize(uLightDir)), 0.0);
 		const halo = pow(lightDot, 42.0).mul(0.55);
 		const disc = pow(lightDot, 1600.0).mul(2.4);
-		base.addAssign(uHot.mul(uLightColor).mul(halo.add(disc)));
+		// Current Three TSL declarations narrow color multiplication to numeric
+		// nodes even though the runtime accepts color nodes here.
+		base.addAssign((uHot as any).mul(uLightColor).mul(halo.add(disc)));
 
 		return base;
 	});

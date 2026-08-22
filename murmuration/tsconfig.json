@@ -1,5 +1,7 @@
 {
+	"extends": "./.hutch/devkit/tsconfig.json",
 	"compilerOptions": {
+		"ignoreDeprecations": "6.0",
 		"target": "ESNext",
 		"useDefineForClassFields": true,
 		"module": "ESNext",
@@ -8,11 +10,13 @@
 		"isolatedModules": true,
 		"moduleDetection": "force",
 		"noEmit": true,
+		"skipLibCheck": true,
 		"strict": true,
 		"noUnusedLocals": true,
 		"noUnusedParameters": true,
 		"noFallthroughCasesInSwitch": true,
-		"moduleResolution": "bundler"
+		"moduleResolution": "bundler",
+		"types": ["bun"]
 	},
 	"include": ["src"],
 	"exclude": ["node_modules", "dist", "build", "../../package/dist"]

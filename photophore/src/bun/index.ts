@@ -1,13 +1,12 @@
 // Must be set before the WebView2 environment is created (the loader
 // reads it from this process's environment):
 // - expose all GPU adapters + DXC, as in murmuration
-// - auto-accept getUserMedia permission prompts: Electrobun 1.18.1
-//   delivers no OS input to composited webviews on Windows, so nobody
-//   could ever click "Allow" on the camera prompt.
+// - auto-accept getUserMedia permission prompts for older composited Windows
+//   webviews where nobody could click "Allow" on the camera prompt.
 process.env.WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS =
 	"--enable-unsafe-webgpu --enable-dawn-features=use_dxc,allow_unsafe_apis --use-fake-ui-for-media-stream";
 
-import { BrowserView, BrowserWindow, Screen, Utils } from "electrobun/bun";
+import { BrowserView, BrowserWindow, Screen, Utils } from "electrobun/main";
 import { existsSync, readdirSync, statSync, watch } from "fs";
 import { resolve, extname, basename } from "path";
 
@@ -166,7 +165,7 @@ const win = new BrowserWindow({
 	rpc,
 });
 
-// ── Input pump (webviews get no OS input on Windows in 1.18.1) ────
+// ── Input pump (fallback for older Windows webview runtimes) ──────
 const inputTimer = setInterval(() => {
 	try {
 		const cursor = Screen.getCursorScreenPoint();

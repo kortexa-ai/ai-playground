@@ -146,7 +146,9 @@ async function main() {
 		const scenePass = pass(scene, camera);
 		const color = scenePass.getTextureNode();
 		const trailed = afterImage(color, 0.72);
-		const bloomed = trailed.add(bloom(trailed, 0.45, 0.55, 0.35));
+		// AfterImageNode is composable at runtime but its current declaration
+		// omits the common TSL node extensions.
+		const bloomed = (trailed as any).add(bloom(trailed as any, 0.45, 0.55, 0.35));
 		const vig = smoothstep(
 			float(1.5),
 			float(0.35),

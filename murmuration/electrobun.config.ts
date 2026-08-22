@@ -7,8 +7,8 @@ export default {
 		version: "0.1.0",
 	},
 	build: {
-		useAsar: false,
-		bun: {
+		mainProcess: "cottontail",
+		cottontail: {
 			entrypoint: "src/bun/index.ts",
 		},
 		views: {

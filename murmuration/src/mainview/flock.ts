@@ -18,7 +18,6 @@ import {
 	sqrt,
 	max,
 	min,
-	dot,
 	length,
 	normalize,
 	mix,

@@ -6,7 +6,7 @@
 process.env.WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS =
 	"--enable-unsafe-webgpu --enable-dawn-features=use_dxc,allow_unsafe_apis";
 
-import { BrowserView, BrowserWindow, Screen } from "electrobun/bun";
+import { BrowserView, BrowserWindow, Screen } from "electrobun/main";
 import { existsSync, readdirSync } from "fs";
 
 // WebView2 runs its GPU process on the power-saving adapter unless the
@@ -42,8 +42,8 @@ try {
 // The experience runs inside the webview (WebView2 exposes
 // navigator.gpu, so three.js WebGPURenderer + TSL compute run there).
 // This process owns the native window, relays telemetry to stdout,
-// and — because Electrobun 1.18.1 does not deliver OS input to
-// composited webviews on Windows — polls the mouse here and streams
+// and — because older composited Windows webviews did not deliver OS input —
+// polls the mouse here and streams
 // it to the view over RPC (the same workaround the official
 // wgpu-threejs template uses for its physics window).
 

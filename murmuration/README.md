@@ -6,7 +6,7 @@ peregrine falcon. Built with [Electrobun](https://blackboard.sh/electrobun)
 `WebGPURenderer` + TSL compute shaders, running inside WebView2's native
 `navigator.gpu` on Windows.
 
-![stack](https://img.shields.io/badge/electrobun-1.18.1-orange)
+![stack](https://img.shields.io/badge/electrobun-2.0.1--beta.31-orange)
 ![stack](https://img.shields.io/badge/three.js-r185-blue)
 ![stack](https://img.shields.io/badge/webgpu-tsl_compute-green)
 
@@ -66,7 +66,7 @@ loopback.
 
 ## Windows quirks discovered along the way
 
-1. **Electrobun 1.18.1 delivers no OS input to webviews on Windows** —
+1. **Older Electrobun/WebView2 combinations delivered no OS input to webviews on Windows** —
    the WebView2 is composited via DirectComposition with no child HWND,
    and clicks/keys never reach the page (the stock template's sliders
    don't work either). Workaround: the bun process polls

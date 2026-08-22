@@ -13,14 +13,10 @@ import {
 	vec3,
 	sin,
 	cos,
-	abs,
-	max,
-	min,
 	pow,
 	exp,
 	dot,
 	length,
-	normalize,
 	mix,
 	clamp,
 	smoothstep,
@@ -149,12 +145,14 @@ export function createParticles(
 		// field texel under this particle (canvas y runs downward)
 		const uvx = clamp(p.x.div(SLAB_W).add(0.5), 0.0, 1.0);
 		const uvy = clamp(float(0.5).sub(p.y.div(SLAB_H)), 0.0, 1.0);
-		const tx = clamp(
+		// The TSL runtime supports integer clamp nodes, but the current
+		// declarations expose only the float/vector overloads.
+		const tx = (clamp as any)(
 			int(uvx.mul(FIELD_W)),
 			int(1),
 			int(FIELD_W - 2),
 		).toConst("tx");
-		const ty = clamp(
+		const ty = (clamp as any)(
 			int(uvy.mul(FIELD_H)),
 			int(1),
 			int(FIELD_H - 2),

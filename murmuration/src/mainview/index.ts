@@ -137,7 +137,9 @@ async function main() {
 		// subtle afterimage gives the flock silky motion trails; bloom
 		// after it so trails of bright glitter glow too
 		const trailed = afterImage(color, 0.72);
-		const bloomed = trailed.add(bloom(trailed, 0.24, 0.5, 0.8));
+		// AfterImageNode is composable at runtime but its current declaration
+		// omits the common TSL node extensions.
+		const bloomed = (trailed as any).add(bloom(trailed as any, 0.24, 0.5, 0.8));
 		const vig = smoothstep(
 			float(1.45),
 			float(0.4),
