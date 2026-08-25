@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Shortwave — a dial, and something under the static</title>
+    <meta
+      name="description"
+      content="A procedural shortwave receiver: five stations synthesized in the tab, one of which sends back whatever you type."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2305060b'/%3E%3Cpath d='M5 20c4-8 7 5 11-2 2-3 4-3 6-1 2 2 3 3 5 3' fill='none' stroke='%23e8a05c' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="room">
+      <header class="masthead">
+        <p class="eyebrow">AI PLAYGROUND · BROWSER WORK 14</p>
+        <h1>Shortwave</h1>
+        <p class="tagline">a dial, and something under the static</p>
+      </header>
+
+      <div class="radio">
+        <div class="screen">
+          <canvas
+            id="spectrum"
+            aria-label="Spectrum of the shortwave band; five stations rise out of the static."
+          ></canvas>
+          <div class="screen-glare" aria-hidden="true"></div>
+          <div class="readout">
+            <div class="freq" id="freq">-- --</div>
+            <div class="station" id="station">NO CARRIER</div>
+          </div>
+        </div>
+
+        <div class="console">
+          <div class="knob-wrap">
+            <div
+              class="knob"
+              id="tune"
+              role="slider"
+              aria-label="Tuning dial"
+              aria-valuemin="530"
+              aria-valuemax="1710"
+              tabindex="0"
+            >
+              <div class="knob-indicator" aria-hidden="true"></div>
+            </div>
+            <span class="knob-label">tune</span>
+          </div>
+
+          <div class="meter-wrap">
+            <canvas id="meter" aria-hidden="true"></canvas>
+            <span class="knob-label">signal</span>
+          </div>
+
+          <div class="knob-wrap">
+            <div
+              class="knob small"
+              id="volume"
+              role="slider"
+              aria-label="Volume"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              tabindex="0"
+            >
+              <div class="knob-indicator" aria-hidden="true"></div>
+            </div>
+            <span class="knob-label">volume</span>
+          </div>
+
+          <button class="power" id="power" aria-pressed="false">
+            <span class="power-led" aria-hidden="true"></span>
+            <span>power</span>
+          </button>
+        </div>
+
+        <div class="transcript">
+          <span class="transcript-label">TALKBACK · 951 kHz</span>
+          <span class="transcript-text" id="transcript">· · ·</span>
+          <span class="send-led" id="send-led" aria-hidden="true"></span>
+        </div>
+      </div>
+
+      <footer class="colophon">
+        <p>
+          Five stations, all synthesized in this tab — no recordings, no files,
+          nothing leaves the page. Turn the power on, drag the dial, and type:
+          the talkback station sends back whatever you type, in Morse.
+          Arrow keys nudge the dial; hold shift for one kHz.
+        </p>
+        <p class="band-list">
+          605 THE CLOCK · 742 THE WEATHER · 951 THE TALKBACK · 1210 THE
+          LULLABY · 1503 THE EMPTY ROOM
+        </p>
+      </footer>
+    </div>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

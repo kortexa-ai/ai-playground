@@ -147,6 +147,7 @@
       if (this.kind === "lean") this.makeLean();
       if (this.kind === "afteryou") this.makeAfteryou();
       if (this.kind === "storybook") this.makeStorybook();
+      if (this.kind === "shortwave") this.makeShortwave();
       this.draw(3.4);
     }
 
@@ -310,6 +311,7 @@
       if (this.kind === "babble") this.drawBabble(time);
       if (this.kind === "aquarium") this.drawAquarium(time);
       if (this.kind === "sounding") this.drawSounding(time);
+      if (this.kind === "shortwave") this.drawShortwave(time);
     }
 
     drawSounding(time) {
@@ -431,6 +433,103 @@
       context.beginPath();
       context.arc(eyeX + Math.sin(time * 0.23) * 2, eyeY, 1.2, 0, TAU);
       context.fill();
+    }
+
+    makeShortwave() {
+      this.swFloor = new Array(96).fill(0.06);
+      this.swStations = [0.064, 0.18, 0.357, 0.576, 0.825];
+      this.swPhase = randomAt(1, 90) * TAU;
+    }
+
+    drawShortwave(time) {
+      const { context, width, height } = this;
+      const night = 0.5 + 0.5 * Math.sin(time * 0.05 + this.swPhase);
+      const bg = context.createLinearGradient(0, 0, 0, height);
+      bg.addColorStop(0, night > 0.5 ? "#05060b" : "#0b0e15");
+      bg.addColorStop(1, "#030408");
+      context.fillStyle = bg;
+      context.fillRect(0, 0, width, height);
+
+      if (night > 0.5) {
+        for (let i = 0; i < 14; i++) {
+          const twinkle = reducedMotion
+            ? 0.7
+            : 0.6 + 0.4 * Math.sin(time * 0.6 + i * 1.7);
+          context.fillStyle =
+            "rgba(214, 224, 240, " + (0.32 * night * twinkle).toFixed(3) + ")";
+          context.fillRect(
+            randomAt(i, 91) * width,
+            randomAt(i, 92) * height * 0.5,
+            1,
+            1,
+          );
+        }
+      }
+
+      for (let i = 0; i < this.swFloor.length; i++) {
+        this.swFloor[i] = clamp(
+          this.swFloor[i] + (Math.random() - 0.5) * 0.02,
+          0.02,
+          0.16,
+        );
+      }
+
+      const baseY = height - 8;
+      const scale = height - 16;
+      context.beginPath();
+      context.moveTo(0, baseY);
+      for (let i = 0; i < this.swFloor.length; i++) {
+        const x = i / (this.swFloor.length - 1);
+        let level = this.swFloor[i];
+        for (const s of this.swStations) {
+          const d = x - s;
+          level += Math.exp(-(d * d) / 0.0006) * (0.3 + 0.55 * night) * 0.7;
+        }
+        context.lineTo(x * width, baseY - clamp(level, 0, 1) * scale);
+      }
+      context.lineTo(width, baseY);
+      context.closePath();
+      const fill = context.createLinearGradient(0, 0, 0, baseY);
+      fill.addColorStop(0, "rgba(232, 160, 92, 0.32)");
+      fill.addColorStop(1, "rgba(232, 160, 92, 0.03)");
+      context.fillStyle = fill;
+      context.fill();
+      context.strokeStyle = "rgba(232, 160, 92, 0.7)";
+      context.lineWidth = 1;
+      context.stroke();
+
+      const nx = (0.5 + 0.44 * Math.sin(time * 0.09 + this.swPhase)) * width;
+      context.strokeStyle = "rgba(255, 217, 160, 0.85)";
+      context.lineWidth = 1.2;
+      context.beginPath();
+      context.moveTo(nx, 5);
+      context.lineTo(nx, baseY);
+      context.stroke();
+      context.fillStyle = "rgba(255, 217, 160, 0.9)";
+      context.beginPath();
+      context.moveTo(nx - 3.5, 2);
+      context.lineTo(nx + 3.5, 2);
+      context.lineTo(nx, 7);
+      context.closePath();
+      context.fill();
+
+      const cx = width - 14;
+      const cy = 14;
+      if (night > 0.5) {
+        context.fillStyle = "rgba(214, 224, 240, 0.8)";
+        context.beginPath();
+        context.arc(cx, cy, 4.5, 0, TAU);
+        context.fill();
+        context.fillStyle = "#05060b";
+        context.beginPath();
+        context.arc(cx - 2.8, cy - 1.5, 4, 0, TAU);
+        context.fill();
+      } else {
+        context.fillStyle = "rgba(232, 160, 92, 0.85)";
+        context.beginPath();
+        context.arc(cx, cy, 4.5, 0, TAU);
+        context.fill();
+      }
     }
 
     drawAquarium(time) {

@@ -366,6 +366,30 @@ load-bearing part — if it is wrong, the net quietly learns nothing.
 [Franci Penov](https://github.com/francip), August 2026 — the first piece in
 the gallery that watches you back.
 
+### [Shortwave](shortwave/)
+
+A dial, and something under the static.
+
+A procedural shortwave receiver for the AM band, synthesized entirely in the
+tab: five stations, no recordings, no files. A clock that only knows the
+time; a formant-synthesized weather voice reporting on a place that does not
+exist; a lullaby for a house that is empty; a room that broadcasts silence;
+and one talkback station that sends back, in Morse, whatever you type. The
+band breathes on a slow day-night cycle—at night the skywave carries the
+stations stronger and the static thins.
+
+```bash
+cd shortwave
+python3 -m http.server 8765
+```
+
+Then open <http://localhost:8765>. Turn the power on, drag the dial to 951,
+and type a word. The station will say it back.
+
+**Created by Qwen**, during a free play session in
+[Franci Penov](https://github.com/francip)'s playground, August 2026—the
+second piece in the gallery that answers back.
+
 ## A note on provenance
 
 These are model-authored experiments, but not orphaned outputs. The human part was

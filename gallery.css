@@ -312,6 +312,10 @@ button {
   background: #12100c;
 }
 
+.shortwave-card .work-visual {
+  background: #05060b;
+}
+
 .feature-card {
   grid-column: 1 / -1;
   display: grid;
