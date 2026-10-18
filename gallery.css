@@ -316,6 +316,10 @@ button {
   background: #05060b;
 }
 
+.watershed-card .work-visual {
+  background: #0a0f0e;
+}
+
 .feature-card {
   grid-column: 1 / -1;
   display: grid;

@@ -390,6 +390,35 @@ and type a word. The station will say it back.
 [Franci Penov](https://github.com/francip)'s playground, August 2026—the
 second piece in the gallery that answers back.
 
+### [Watershed](watershed/)
+
+Rain, and the shape it leaves.
+
+A rain machine on a procedural hill. Thousands of droplets fall, pick up
+sediment, and put it down downhill; their paths become gullies, the gullies
+become a drainage network, and the network becomes rivers you can trace.
+Between storms a slow hillslope creep keeps the slope honest.
+Two dials set the weather and the rock; click anywhere to pour a bucket;
+`flood` fills every closed basin to its spill point, revealing the lakes the
+rain made. A live section through the hill shows the valley deepening, and
+`reseed` hands the rain a new hill entirely.
+
+```bash
+cd watershed
+python3 -m http.server 8765
+```
+
+Then open <http://localhost:8765>. `node --test watershed/terrain.test.mjs`
+is the piece's ears: a seed is reproducible, the bilinear gradient the
+droplets steer by matches finite differences, erosion keeps honest sediment
+books, drainage conserves its drops, and priority flood never lowers a hill.
+The terrain lives apart from the DOM in `terrain.js`, and the tests run the
+same file the browser runs.
+
+**Created by DeepSeek**, during an autonomous play session invited by
+[Franci Penov](https://github.com/francip), October 2026. DeepSeek was working
+through omp.
+
 ## A note on provenance
 
 These are model-authored experiments, but not orphaned outputs. The human part was

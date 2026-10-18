@@ -43,6 +43,41 @@
     );
   }
 
+  // A compact D8 drainage pass for the Watershed gallery preview. The piece's
+  // own terrain.js carries the full, tested version; this one only has to draw
+  // a still river network once per resize.
+  function watershedFlow(map, cols, rows) {
+    const count = cols * rows;
+    const order = new Array(count);
+    for (let i = 0; i < count; i++) order[i] = i;
+    order.sort((a, b) => map[b] - map[a]);
+    const accumulation = new Float32Array(count);
+    accumulation.fill(1);
+    for (const index of order) {
+      const x = index % cols;
+      const y = (index - x) / cols;
+      let best = -1;
+      let bestDrop = 0;
+      for (let dy = -1; dy <= 1; dy++) {
+        const ny = y + dy;
+        if (ny < 0 || ny >= rows) continue;
+        for (let dx = -1; dx <= 1; dx++) {
+          if (dx === 0 && dy === 0) continue;
+          const nx = x + dx;
+          if (nx < 0 || nx >= cols) continue;
+          const neighbour = ny * cols + nx;
+          const drop = map[index] - map[neighbour];
+          if (drop > bestDrop) {
+            bestDrop = drop;
+            best = neighbour;
+          }
+        }
+      }
+      if (best >= 0) accumulation[best] += accumulation[index];
+    }
+    return accumulation;
+  }
+
   function sizeCanvas(canvas, context) {
     const rect = canvas.getBoundingClientRect();
     const dpr = Math.min(devicePixelRatio || 1, 2);
@@ -148,6 +183,7 @@
       if (this.kind === "afteryou") this.makeAfteryou();
       if (this.kind === "storybook") this.makeStorybook();
       if (this.kind === "shortwave") this.makeShortwave();
+      if (this.kind === "watershed") this.makeWatershed();
       this.draw(3.4);
     }
 
@@ -312,6 +348,7 @@
       if (this.kind === "aquarium") this.drawAquarium(time);
       if (this.kind === "sounding") this.drawSounding(time);
       if (this.kind === "shortwave") this.drawShortwave(time);
+      if (this.kind === "watershed") this.drawWatershed(time);
     }
 
     drawSounding(time) {
@@ -433,6 +470,166 @@
       context.beginPath();
       context.arc(eyeX + Math.sin(time * 0.23) * 2, eyeY, 1.2, 0, TAU);
       context.fill();
+    }
+
+    makeWatershed() {
+      const cols = clamp(Math.round(this.width / 5.5), 56, 132);
+      const rows = clamp(Math.round(this.height / 5.5), 36, 92);
+      const heights = new Float32Array(cols * rows);
+      const bumps = Array.from({ length: 18 }, (_, index) => ({
+        x: randomAt(index, 210),
+        y: randomAt(index, 211),
+        radius: 0.05 + randomAt(index, 212) * 0.18,
+        weight: 0.16 + randomAt(index, 213) * 0.5,
+      }));
+      for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
+          const nx = x / (cols - 1);
+          const ny = y / (rows - 1);
+          let height = 0.12;
+          for (const bump of bumps) {
+            const dx = nx - bump.x;
+            const dy = ny - bump.y;
+            height +=
+              bump.weight *
+              Math.exp(-(dx * dx + dy * dy) / (bump.radius * bump.radius));
+          }
+          height +=
+            0.09 *
+            Math.sin(nx * 8.4 + ny * 3.1) *
+            Math.sin(ny * 6.7 - nx * 2.6);
+          const edge = Math.min(nx, 1 - nx, ny, 1 - ny);
+          height *= 0.3 + 0.7 * smoothstep(clamp(edge / 0.14, 0, 1));
+          heights[y * cols + x] = height;
+        }
+      }
+
+      let lowest = Infinity;
+      let highest = -Infinity;
+      for (const value of heights) {
+        lowest = Math.min(lowest, value);
+        highest = Math.max(highest, value);
+      }
+      const span = highest - lowest || 1;
+      for (let i = 0; i < heights.length; i++) {
+        heights[i] = (heights[i] - lowest) / span;
+      }
+
+      const accumulation = watershedFlow(heights, cols, rows);
+      const previewCanvas = document.createElement("canvas");
+      previewCanvas.width = cols;
+      previewCanvas.height = rows;
+      const previewContext = previewCanvas.getContext("2d");
+      const image = previewContext.createImageData(cols, rows);
+      const pixels = image.data;
+      const palette = [
+        [11, 20, 19],
+        [28, 46, 39],
+        [68, 78, 58],
+        [130, 124, 100],
+        [198, 188, 162],
+        [240, 234, 216],
+      ];
+      const strength = cols * 0.95;
+      let outlet = 0;
+      let outletFlow = 0;
+      for (let i = 0; i < accumulation.length; i++) {
+        if (accumulation[i] > outletFlow) {
+          outletFlow = accumulation[i];
+          outlet = i;
+        }
+      }
+      this.wsOutlet = {
+        x: (outlet % cols) / (cols - 1),
+        y: Math.floor(outlet / cols) / (rows - 1),
+      };
+
+      for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
+          const index = y * cols + x;
+          const height = heights[index];
+          const left = heights[y * cols + Math.max(0, x - 1)];
+          const right = heights[y * cols + Math.min(cols - 1, x + 1)];
+          const up = heights[Math.max(0, y - 1) * cols + x];
+          const down = heights[Math.min(rows - 1, y + 1) * cols + x];
+          const dzdx = (right - left) * 0.5 * strength;
+          const dzdy = (down - up) * 0.5 * strength;
+          const inverse = 1 / Math.sqrt(dzdx * dzdx + dzdy * dzdy + 1);
+          const lambert = (dzdx * 0.55 + dzdy * 0.62 + 0.56) * inverse;
+          const shade = clamp(0.3 + 0.82 * lambert, 0.2, 1.2);
+          const position = height * (palette.length - 1);
+          const lower = Math.min(palette.length - 1, Math.floor(position));
+          const upper = Math.min(palette.length - 1, lower + 1);
+          const mix = position - lower;
+          let red =
+            (palette[lower][0] +
+              (palette[upper][0] - palette[lower][0]) * mix) *
+            shade;
+          let green =
+            (palette[lower][1] +
+              (palette[upper][1] - palette[lower][1]) * mix) *
+            shade;
+          let blue =
+            (palette[lower][2] +
+              (palette[upper][2] - palette[lower][2]) * mix) *
+            shade;
+          if (accumulation[index] >= 28) {
+            const alpha = Math.min(0.7, 0.25 + accumulation[index] / 180);
+            red += (126 - red) * alpha;
+            green += (202 - green) * alpha;
+            blue += (190 - blue) * alpha;
+          }
+          const offset = index * 4;
+          pixels[offset] = red;
+          pixels[offset + 1] = green;
+          pixels[offset + 2] = blue;
+          pixels[offset + 3] = 255;
+        }
+      }
+      previewContext.putImageData(image, 0, 0);
+      this.wsCanvas = previewCanvas;
+      this.wsRain = Array.from({ length: 54 }, (_, index) => ({
+        x: randomAt(index, 220),
+        y: randomAt(index, 221),
+        speed: 0.06 + randomAt(index, 222) * 0.1,
+        length: 8 + randomAt(index, 223) * 14,
+      }));
+    }
+
+    drawWatershed(time) {
+      const { context, width, height } = this;
+      context.fillStyle = "#0a0f0e";
+      context.fillRect(0, 0, width, height);
+      context.imageSmoothingEnabled = true;
+      context.drawImage(this.wsCanvas, 0, 0, width, height);
+
+      const outletX = this.wsOutlet.x * width;
+      const outletY = this.wsOutlet.y * height;
+      const pulse = reducedMotion ? 0.6 : 0.5 + 0.5 * Math.sin(time * 0.8);
+      const glow = context.createRadialGradient(
+        outletX,
+        outletY,
+        0,
+        outletX,
+        outletY,
+        width * 0.16,
+      );
+      glow.addColorStop(0, "rgba(126, 202, 190, " + (0.13 + pulse * 0.12) + ")");
+      glow.addColorStop(1, "rgba(126, 202, 190, 0)");
+      context.fillStyle = glow;
+      context.fillRect(0, 0, width, height);
+
+      const drift = reducedMotion ? 2.4 : time * 0.9;
+      context.strokeStyle = "rgba(196, 217, 207, 0.1)";
+      context.lineWidth = 1;
+      context.beginPath();
+      for (const drop of this.wsRain) {
+        const y = ((drop.y + drift * drop.speed) % 1) * (height + 30) - 15;
+        const x = ((drop.x + drift * drop.speed * 0.12) % 1) * width;
+        context.moveTo(x, y);
+        context.lineTo(x + drop.length * 0.25, y + drop.length);
+      }
+      context.stroke();
     }
 
     makeShortwave() {

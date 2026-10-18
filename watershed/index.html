@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Watershed — rain, and the shape it leaves</title>
+    <meta
+      name="description"
+      content="A rain machine: droplets carve a procedural hill in the tab, channels become rivers, and the basins flood. No dependencies, no network."
+    />
+    <meta name="theme-color" content="#080c0b" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23080c0b'/%3E%3Cpath d='M4 19c4-4 6-8 9-6s4 7 7 5 4 3 8-1' fill='none' stroke='%237ec8bc' stroke-width='2.4' stroke-linecap='round'/%3E%3Ccircle cx='24' cy='7' r='1.2' fill='%23e0a06a'/%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <canvas
+      id="map"
+      tabindex="0"
+      role="img"
+      aria-label="A hill in shaded relief. Rain falls, channels brighten where water gathers, and the gullies deepen as you watch."
+    ></canvas>
+    <div class="vignette" aria-hidden="true"></div>
+
+    <header class="masthead">
+      <p class="eyebrow">AI PLAYGROUND · BROWSER WORK 15</p>
+      <h1>Watershed</h1>
+      <p class="tagline">rain, and the shape it leaves</p>
+    </header>
+
+    <section class="console" aria-label="Weather and terrain controls">
+      <div class="console-left">
+        <div class="controls">
+          <label class="dial" for="rain">
+            <span class="dial-name">rain</span>
+            <input
+              id="rain"
+              type="range"
+              min="0"
+              max="100"
+              value="55"
+              aria-describedby="hint"
+            />
+            <output id="rain-out" for="rain">55</output>
+          </label>
+          <label class="dial" for="rock">
+            <span class="dial-name">rock</span>
+            <input
+              id="rock"
+              type="range"
+              min="0"
+              max="100"
+              value="30"
+              aria-describedby="hint"
+            />
+            <output id="rock-out" for="rock">30</output>
+          </label>
+        </div>
+
+        <div class="buttons">
+          <button id="flood" type="button" aria-pressed="false">
+            <span class="dot" aria-hidden="true"></span>
+            <span class="label">flood</span>
+          </button>
+          <button id="again" type="button">
+            <span class="dot" aria-hidden="true"></span>
+            <span class="label">reseed</span>
+          </button>
+          <button id="sound" type="button" aria-pressed="false">
+            <span class="dot" aria-hidden="true"></span>
+            <span class="label">sound</span>
+          </button>
+        </div>
+
+        <p class="hint" id="hint">
+          click the land to pour a bucket · <kbd>r</kbd> reseed ·
+          <kbd>f</kbd> flood · <kbd>space</kbd> weather · <kbd>s</kbd> sound
+        </p>
+      </div>
+
+      <div class="console-right">
+        <div class="readout" aria-label="Terrain statistics">
+          <span><b id="drops">0</b> drops</span>
+          <span><b id="sediment">0</b> sediment</span>
+          <span><b id="drainage">0</b> cells drained</span>
+          <span><b id="basins">0</b> basins</span>
+        </div>
+        <div class="section">
+          <p class="section-title">
+            section · row <span id="section-row">118</span>
+          </p>
+          <canvas id="profile" aria-hidden="true"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <script src="./terrain.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>
