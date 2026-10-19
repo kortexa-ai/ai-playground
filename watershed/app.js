@@ -13,12 +13,12 @@
   const COLS = 300;
   const ROWS = 190;
   const RIVER_MIN = 14; // upstream cells before a channel is drawn
-  const MAX_DROPS_PER_SECOND = 1500;
+  const MAX_DROPS_PER_SECOND = 4000;
   const DROPLET_OPTIONS = {
-    lifetime: 36,
-    capacityFactor: 4,
+    lifetime: 50,
+    capacityFactor: 6,
     brushRadius: 3,
-    maxStepErode: 0.02,
+    maxStepErode: 0.03,
     depositSpeed: 0.3,
   };
   const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -55,6 +55,7 @@
     sediment: 0,
     dropBudget: 0,
     refreshTimer: 0,
+    dropsSinceCreep: 0,
     floodTimer: 0,
     pourRemaining: 0,
     pourX: 0,
@@ -175,6 +176,9 @@
     state.drops = 0;
     state.sediment = 0;
     state.dropBudget = 0;
+    state.refreshTimer = 0;
+    state.dropsSinceCreep = 0;
+    state.floodTimer = 0;
     state.pourRemaining = 0;
     state.ripples.length = 0;
     state.raining = true;
@@ -183,8 +187,10 @@
   }
 
   function erodeSpeed() {
-    return 0.05 + 0.55 * (1 - state.rock / 100);
+    return 0.05 + 0.6 * (1 - state.rock / 100);
   }
+
+  const CREEP_EVERY = 800;
 
   function spawnDroplet(x, y) {
     const options = Object.assign({}, DROPLET_OPTIONS, {
@@ -195,6 +201,14 @@
     const result = T.simulateDroplet(state.heights, COLS, ROWS, options);
     state.drops++;
     state.sediment += result.eroded;
+    state.dropsSinceCreep++;
+    // Creep is a function of how much ground has been worked, not of wall
+    // time: heavier rain should smooth more often in the same second, or the
+    // slope roughens into brush-sized pits.
+    if (state.dropsSinceCreep >= CREEP_EVERY) {
+      state.dropsSinceCreep = 0;
+      T.diffuse(state.heights, COLS, ROWS, 0.2);
+    }
   }
 
   function refreshDrainage(force) {
@@ -476,7 +490,7 @@
   function pourAt(clientX, clientY) {
     state.pourX = (clientX / width) * COLS;
     state.pourY = (clientY / height) * ROWS;
-    state.pourRemaining = 300;
+    state.pourRemaining = 520;
     state.ripples.push({
       x: (clientX / width) * width,
       y: (clientY / height) * height,
@@ -504,7 +518,7 @@
     if (!pouring) return;
     state.pourX = (event.clientX / width) * COLS;
     state.pourY = (event.clientY / height) * ROWS;
-    if (state.pourRemaining < 120) state.pourRemaining = 120;
+    if (state.pourRemaining < 200) state.pourRemaining = 200;
   });
   const stopPouring = () => {
     pouring = false;
@@ -545,7 +559,7 @@
     if (state.raining && state.rain > 0) {
       const rate = (state.rain / 100) * MAX_DROPS_PER_SECOND;
       state.dropBudget += rate * dt;
-      const count = Math.min(30, Math.floor(state.dropBudget));
+      const count = Math.min(120, Math.floor(state.dropBudget));
       state.dropBudget -= count;
       for (let i = 0; i < count; i++) spawnDroplet();
     } else {
@@ -567,7 +581,6 @@
     state.refreshTimer += dt;
     if (state.refreshTimer >= 0.6) {
       state.refreshTimer = 0;
-      T.diffuse(state.heights, COLS, ROWS, 0.12);
       refreshDrainage(false);
     }
 

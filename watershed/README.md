@@ -38,3 +38,12 @@ finite differences, terrain and droplet keep matching sediment books, drainage
 conserves its drops, priority flood fills a bowl to its rim without digging,
 hillslope creep smooths without flattening, and a long storm still leaves a
 channel the drainage can find.
+
+## Why the rain is not on the GPU
+
+The grid is 300×190 cells. At maximum rain with flood on, a CPU profile of the
+page shows it idle about 86% of the time: the droplet walk, the drainage sort,
+and the hillshade all fit easily inside a frame, and the page stays at 60 fps.
+The piece stays plain JavaScript so the tests run the exact geology the browser
+runs. If you want to wear the hill down faster, put rain at 100 and rock at 0.
+
